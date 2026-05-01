@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Register — {{ s.app_name }}{% endblock %}
+
+{% block content %}
+<div style="min-height:calc(100vh - 58px); display:flex; align-items:center; justify-content:center; padding:20px; position:relative; z-index:1;">
+  <div style="width:100%; max-width:440px;">
+    <div style="text-align:center; margin-bottom:36px;">
+      <div style="font-family:var(--mono); font-size:11px; color:var(--text3); letter-spacing:3px; text-transform:uppercase; margin-bottom:10px;">JOIN THE NETWORK</div>
+      <h1 style="font-family:var(--head); font-size:48px; font-weight:900; text-transform:uppercase; letter-spacing:2px;">
+        Create <span style="color:var(--accent)">Account</span>
+      </h1>
+      <p style="color:var(--text2); font-size:13px; margin-top:6px;">Your phone number is your username — you'll receive alerts directly</p>
+    </div>
+
+    {% if error %}
+    <div class="error-msg">{{ error }}</div>
+    {% endif %}
+
+    <div class="card">
+      <form method="POST" action="/register">
+        <div class="form-group">
+          <label>Phone Number <span style="color:var(--danger)">*</span></label>
+          <input type="tel" name="phone" placeholder="(555) 000-0000" autocomplete="tel" required autofocus>
+          <div style="font-size:11px; color:var(--text3); margin-top:4px; font-family:var(--mono);">This is your username. Alerts will be sent to this number.</div>
+        </div>
+        <div class="form-group">
+          <label>Display Name <span style="color:var(--text3)">(optional)</span></label>
+          <input type="text" name="display_name" placeholder="Your name or alias" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label>Password <span style="color:var(--danger)">*</span></label>
+          <input type="password" name="password" placeholder="Min. 6 characters" autocomplete="new-password" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Confirm Password <span style="color:var(--danger)">*</span></label>
+          <input type="password" id="pw2" placeholder="Repeat password" required>
+          <div id="pwMatch" style="font-size:11px; color:var(--text3); margin-top:4px; font-family:var(--mono);"></div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="margin-top:8px;">
+          ◉ JOIN NETWORK
+        </button>
+      </form>
+    </div>
+
+    <p style="text-align:center; margin-top:20px; font-size:13px; color:var(--text2);">
+      Already have an account? <a href="/login" style="color:var(--accent2); text-decoration:none;">Sign in →</a>
+    </p>
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+const pw1 = document.querySelector('input[name=password]');
+const pw2 = document.getElementById('pw2');
+const hint = document.getElementById('pwMatch');
+pw2.addEventListener('input', () => {
+  if (pw2.value === pw1.value) {
+    hint.style.color = 'var(--accent3)'; hint.textContent = '✓ Passwords match';
+  } else {
+    hint.style.color = 'var(--danger)'; hint.textContent = '✗ Passwords do not match';
+  }
+});
+document.querySelector('form').addEventListener('submit', e => {
+  if (pw1.value !== pw2.value) { e.preventDefault(); alert('Passwords do not match.'); }
+});
+</script>
+{% endblock %}
+{% endblock %}

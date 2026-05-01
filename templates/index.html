@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ff6b00">
+<link rel="manifest" href="/manifest.json">
+<title>{{ s.app_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c14; --bg2: #0d1220; --panel: #131c2e; --border: #1e2d45;
+    --accent: #ff6b00; --accent2: #00d4ff; --text: #c8d8f0; --text2: #7890b0; --text3: #3a5070;
+    --mono: 'Share Tech Mono', monospace; --head: 'Barlow Condensed', sans-serif; --body: 'Barlow', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--body); min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden; position: relative;
+  }
+  /* Animated grid bg */
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridMove 20s linear infinite;
+  }
+  @keyframes gridMove { from { transform: translateY(0); } to { transform: translateY(60px); } }
+  body::after {
+    content: ''; position: fixed; inset: 0;
+    background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(255,107,0,0.06), transparent);
+    pointer-events: none;
+  }
+  .hero {
+    text-align: center; position: relative; z-index: 1;
+    padding: 40px 20px; max-width: 600px;
+  }
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 4px;
+    color: var(--accent2); text-transform: uppercase; margin-bottom: 16px;
+  }
+  .hero-title {
+    font-family: var(--head); font-size: clamp(56px, 10vw, 96px);
+    font-weight: 900; line-height: .9; text-transform: uppercase; letter-spacing: -2px;
+  }
+  .hero-title .line1 { color: var(--text); display: block; }
+  .hero-title .line2 { color: var(--accent); display: block; }
+  .hero-desc {
+    margin-top: 20px; color: var(--text2);
+    font-size: 15px; line-height: 1.6; max-width: 420px; margin-left: auto; margin-right: auto;
+  }
+  .hero-buttons { margin-top: 36px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--head); font-size: 14px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    padding: 14px 32px; border: 1px solid; border-radius: 2px;
+    cursor: pointer; text-decoration: none; transition: all .25s;
+  }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #000; }
+  .btn-primary:hover { background: transparent; color: var(--accent); }
+  .btn-secondary { background: transparent; border-color: var(--text3); color: var(--text2); }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+  .corner { position: fixed; font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .corner.tl { top: 20px; left: 20px; }
+  .corner.tr { top: 20px; right: 20px; text-align: right; }
+  .corner.bl { bottom: 20px; left: 20px; }
+  .scan-line {
+    position: fixed; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+    animation: scan 4s linear infinite;
+    opacity: 0.4;
+  }
+  @keyframes scan { from { top: 0; } to { top: 100vh; } }
+  .features {
+    display: flex; gap: 16px; margin-top: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .feat {
+    background: rgba(13,18,32,0.8); border: 1px solid var(--border);
+    padding: 12px 16px; border-radius: 2px; font-family: var(--mono);
+    font-size: 11px; color: var(--text2); letter-spacing: 1px;
+  }
+  .feat span { color: var(--accent3); margin-right: 6px; }
+  :root { --accent3: #39ff14; }
+</style>
+</head>
+<body>
+<div class="scan-line"></div>
+<div class="corner tl">SYS::ACTIVE<br>NET::ONLINE</div>
+<div class="corner tr" id="clockDiv"></div>
+<div class="corner bl">{{ s.app_name|upper }} // v2.0</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">⚑ Community Alert Network</div>
+  <h1 class="hero-title">
+    {% set parts = s.app_name.split() %}
+    <span class="line1">{{ parts[0] if parts|length > 1 else s.app_name }}</span>
+    <span class="line2">{% if parts|length > 1 %}{{ parts[1:] | join(' ') }}{% endif %}</span>
+  </h1>
+  <p class="hero-desc">{{ s.subject_description }}</p>
+  <div class="hero-buttons">
+    <a href="/login" class="btn btn-primary">Sign In</a>
+    {% if s.allow_registration == '1' %}
+    <a href="/register" class="btn btn-secondary">Create Account</a>
+    {% endif %}
+  </div>
+  <div class="features">
+    <div class="feat"><span>◉</span>Live Map Tracking</div>
+    <div class="feat"><span>◉</span>Instant Alerts</div>
+    <div class="feat"><span>◉</span>Report Sightings</div>
+    <div class="feat"><span>◉</span>Area Notifications</div>
+  </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+function tick() {
+  const now = new Date();
+  document.getElementById('clockDiv').textContent =
+    now.toLocaleDateString() + '\n' + now.toLocaleTimeString();
+}
+setInterval(tick, 1000); tick();
+</script>
+</body>
+</html>
