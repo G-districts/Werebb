@@ -1,114 +1,120 @@
 {% extends "base.html" %}
 {% block title %}Report Sighting — {{ s.app_name }}{% endblock %}
-
 {% block content %}
 <div class="container">
   <div class="page-header">
-    <h1>Report <span>Sighting</span></h1>
-    <p>SUBMIT A LOCATION REPORT FOR {{ s.subject_name|upper }}</p>
+    <h1>📍 Report Sighting</h1>
+    <p>Mark where you saw {{ s.teacher_name }} — the more detail the better!</p>
   </div>
 
-  {% if error %}
-  <div class="error-msg">{{ error }}</div>
-  {% endif %}
+  {% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
 
-  <div class="grid grid-2">
-    <div>
-      <div class="card">
-        <div class="card-header">Location Details</div>
-        <form method="POST" action="/report" id="reportForm">
-          <input type="hidden" name="lat" id="lat">
-          <input type="hidden" name="lng" id="lng">
+  <div class="grid g2" style="grid-template-columns:1fr 1fr;gap:16px;">
 
-          <div class="form-group">
-            <label>Location Method</label>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="useGPS()">◎ Use My GPS</button>
-              <button type="button" class="btn btn-sm" style="border-color:var(--text3);color:var(--text2);" onclick="clickMap()">🗺 Click on Map</button>
-            </div>
+    <!-- Form -->
+    <div class="card">
+      <div class="card-title"><div class="cti cti-r">📝</div>Sighting Details</div>
+      <form method="POST" id="reportForm">
+        <input type="hidden" name="lat" id="fLat">
+        <input type="hidden" name="lng" id="fLng">
+
+        <div class="form-group">
+          <label>How to set location</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="useGPS()">📡 Use my GPS</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="tapMode()">🗺 Tap on map</button>
           </div>
+        </div>
 
-          <div class="form-group">
-            <label>Coordinates</label>
-            <div style="display:flex; gap:8px;">
-              <input type="number" id="latDisplay" step="any" placeholder="Latitude" style="width:50%;" onchange="updateFromInputs()">
-              <input type="number" id="lngDisplay" step="any" placeholder="Longitude" style="width:50%;" onchange="updateFromInputs()">
-            </div>
-            <div id="coordStatus" style="font-family:var(--mono); font-size:11px; color:var(--text3); margin-top:4px;"></div>
+        <div class="form-group">
+          <label>Coordinates</label>
+          <div style="display:flex;gap:8px;">
+            <input type="number" id="dLat" step="any" placeholder="Latitude" style="width:50%;" onchange="updateFromFields()">
+            <input type="number" id="dLng" step="any" placeholder="Longitude" style="width:50%;" onchange="updateFromFields()">
           </div>
+          <div class="hint" id="coordHint">Use GPS or tap the map to set your pin.</div>
+        </div>
 
-          <div class="form-group">
-            <label>Address / Landmark <span style="color:var(--text3)">(optional)</span></label>
-            <input type="text" name="address" id="address" placeholder="e.g. Corner of Main & 5th, near Walmart...">
-          </div>
+        <div class="form-group">
+          <label>Address / Landmark</label>
+          <input type="text" name="address" id="addrField" placeholder="e.g. B Hall, near the gym, parking lot…">
+        </div>
 
-          <div class="form-group">
-            <label>Description <span style="color:var(--text3)">(optional but helpful)</span></label>
-            <textarea name="description" placeholder="Describe what you saw — direction of travel, appearance, vehicle, anything useful..."></textarea>
-          </div>
+        <div class="form-group">
+          <label>What did you see?</label>
+          <textarea name="description" placeholder="Direction they were heading, what they were doing, anything useful…"></textarea>
+        </div>
 
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
-            <button type="submit" class="btn btn-danger" id="submitBtn" disabled>⚑ SUBMIT REPORT</button>
-            <a href="/dashboard" class="btn btn-sm" style="border-color:var(--text3);color:var(--text2);">Cancel</a>
-          </div>
-        </form>
-      </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button type="submit" class="btn btn-orange btn-lg" id="subBtn" disabled>🚨 Submit Report</button>
+          <a href="/dashboard" class="btn btn-ghost btn-lg">Cancel</a>
+        </div>
+      </form>
     </div>
 
-    <!-- Map picker -->
-    <div class="card">
-      <div class="card-header">Pick Location on Map</div>
-      <div class="map-container" id="map" style="height:380px;"></div>
-      <div style="font-family:var(--mono); font-size:11px; color:var(--text3); margin-top:8px;" id="mapHint">Click the map to place a pin</div>
+    <!-- Satellite Map picker -->
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-size:13.5px;font-weight:700;color:var(--text);">
+        🗺 Tap map to pin location
+      </div>
+      <div id="map" style="height:480px;"></div>
+      <div style="padding:10px 14px;font-size:12px;color:var(--text3);border-top:1px solid var(--border);" id="mapHint">
+        Tap anywhere on the satellite map to drop a pin.
+      </div>
     </div>
   </div>
 </div>
 
 {% block scripts %}
 <script>
-const map = L.map('map').setView([{{ s.map_default_lat }}, {{ s.map_default_lng }}], {{ s.map_default_zoom }});
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '©OpenStreetMap ©CartoDB', subdomains: 'abcd', maxZoom: 19
+const map = L.map('map').setView([{{ s.map_default_lat }},{{ s.map_default_lng }}],{{ s.map_default_zoom }});
+
+// Satellite tiles
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
+  attribution:'Tiles © Esri', maxZoom:19
+}).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{
+  attribution:'', maxZoom:19, opacity:.9
 }).addTo(map);
 
-let marker = null;
 const pinIcon = L.divIcon({
-  html: '<div style="font-size:28px; transform:translateX(-50%) translateY(-100%);">⚑</div>',
-  className: '', iconSize: [28,28], iconAnchor: [14,28]
+  html:'<div style="font-size:32px;transform:translate(-50%,-100%);filter:drop-shadow(0 3px 6px rgba(0,0,0,.4))">📍</div>',
+  className:'', iconSize:[32,32], iconAnchor:[16,32]
 });
 
-function setCoords(lat, lng) {
-  document.getElementById('lat').value = lat;
-  document.getElementById('lng').value = lng;
-  document.getElementById('latDisplay').value = lat.toFixed(6);
-  document.getElementById('lngDisplay').value = lng.toFixed(6);
-  document.getElementById('submitBtn').disabled = false;
-  document.getElementById('coordStatus').textContent = '✓ Location set';
-  document.getElementById('coordStatus').style.color = 'var(--accent3)';
-  if (marker) map.removeLayer(marker);
-  marker = L.marker([lat, lng], {icon: pinIcon}).addTo(map);
-  map.setView([lat, lng], 15);
+let marker=null;
+
+function setCoords(lat,lng){
+  document.getElementById('fLat').value=lat;
+  document.getElementById('fLng').value=lng;
+  document.getElementById('dLat').value=lat.toFixed(6);
+  document.getElementById('dLng').value=lng.toFixed(6);
+  document.getElementById('subBtn').disabled=false;
+  document.getElementById('coordHint').innerHTML='<span style="color:var(--green);font-weight:600;">✓ Location set! Fill in details below.</span>';
+  if(marker) map.removeLayer(marker);
+  marker=L.marker([lat,lng],{icon:pinIcon}).addTo(map);
+  map.setView([lat,lng],17);
 }
 
-function useGPS() {
-  document.getElementById('coordStatus').textContent = 'Getting GPS...';
+function useGPS(){
+  document.getElementById('coordHint').textContent='Getting GPS…';
   navigator.geolocation.getCurrentPosition(
-    pos => setCoords(pos.coords.latitude, pos.coords.longitude),
-    () => { document.getElementById('coordStatus').textContent = 'GPS denied — click the map'; }
+    p=>setCoords(p.coords.latitude,p.coords.longitude),
+    ()=>{ document.getElementById('coordHint').innerHTML='<span style="color:var(--red)">GPS denied — tap the map instead.</span>'; }
   );
 }
 
-function clickMap() {
-  document.getElementById('mapHint').textContent = '👆 Click anywhere on the map to place the pin';
-  document.getElementById('mapHint').style.color = 'var(--accent2)';
+function tapMode(){
+  document.getElementById('mapHint').style.color='var(--accent)';
+  document.getElementById('mapHint').textContent='👆 Now tap the map to drop a pin!';
 }
 
-map.on('click', e => setCoords(e.latlng.lat, e.latlng.lng));
+map.on('click', e=>setCoords(e.latlng.lat,e.latlng.lng));
 
-function updateFromInputs() {
-  const lat = parseFloat(document.getElementById('latDisplay').value);
-  const lng = parseFloat(document.getElementById('lngDisplay').value);
-  if (!isNaN(lat) && !isNaN(lng)) setCoords(lat, lng);
+function updateFromFields(){
+  const lat=parseFloat(document.getElementById('dLat').value);
+  const lng=parseFloat(document.getElementById('dLng').value);
+  if(!isNaN(lat)&&!isNaN(lng)) setCoords(lat,lng);
 }
 
 // Auto-try GPS on load
