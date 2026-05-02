@@ -3,76 +3,75 @@
 {% block head %}
 <style>
 .sight-row{background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 15px;margin-bottom:8px;}
-.sight-row.pending{border-left:3px solid var(--yellow-br);}
-.sight-row.reviewed{border-left:3px solid var(--green-br);}
-.sight-row.dismissed{border-left:3px solid var(--text4);}
-.sight-row.latest{animation:sightingFlash 1.4s ease-in-out infinite,flashBorder 1s ease-in-out infinite;border-width:2px;}
-.map-admin{height:420px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);}
+.sight-row.pending  {border-left:3px solid var(--amber-br);}
+.sight-row.reviewed {border-left:3px solid var(--green-br);}
+.sight-row.dismissed{border-left:3px solid var(--text5);}
 </style>
 {% endblock %}
 {% block content %}
 <div class="container">
 
   <!-- Header -->
-  <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;flex-wrap:wrap;">
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
     <div>
-      <h1 style="font-size:26px;font-weight:800;letter-spacing:-.5px;">Admin Dashboard</h1>
-      <p style="color:var(--text3);font-size:14px;margin-top:4px;">{{ s.app_name }} · Teacher Location Network</p>
+      <div class="page-title">Admin Dashboard</div>
+      <div class="page-sub">{{ s.app_name }} · Where's {{ s.teacher_name }}?</div>
     </div>
-    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
-      <!-- Display name form -->
-      <form method="POST" action="/profile" style="display:flex;gap:6px;">
-        <input type="text" name="display_name" placeholder="Change your display name…" style="width:200px;font-size:13px;padding:8px 12px;">
-        <button type="submit" class="btn btn-secondary btn-sm">Save name</button>
-      </form>
-    </div>
+    <!-- Display name change -->
+    <form method="POST" action="/profile" style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div style="font-size:13px;color:var(--text4);">Reporting as:</div>
+      <input type="text" name="display_name" value="{{ session.disp_name }}" placeholder="Your display name" style="width:190px;font-size:13px;padding:8px 11px;">
+      <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+    </form>
   </div>
 
   <!-- Stats -->
   <div class="grid g4 mb-16">
-    <div class="stat-card"><div class="stat-icon" style="background:var(--accent-lt);">👥</div><div class="stat-num" id="sUsers">—</div><div class="stat-lbl">Users</div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:var(--red-lt);">📍</div><div class="stat-num" id="sSightings">—</div><div class="stat-lbl">Sightings</div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:var(--yellow-lt);">⏳</div><div class="stat-num" id="sPending" style="color:var(--yellow);">—</div><div class="stat-lbl">Pending Review</div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:var(--orange-lt);">🔔</div><div class="stat-num" id="sAlerts">—</div><div class="stat-lbl">Alerts Sent</div></div>
+    <div class="stat"><div class="stat-icon" style="background:var(--accent-lt);">👥</div><div class="stat-num" id="sU">—</div><div class="stat-lbl">Registered Users</div></div>
+    <div class="stat"><div class="stat-icon" style="background:var(--red-lt);">📍</div><div class="stat-num" id="sS">—</div><div class="stat-lbl">Total Sightings</div></div>
+    <div class="stat"><div class="stat-icon" style="background:var(--amber-lt);">⏳</div><div class="stat-num" id="sP" style="color:var(--amber);">—</div><div class="stat-lbl">Pending Review</div></div>
+    <div class="stat"><div class="stat-icon" style="background:var(--orange-lt);">🔔</div><div class="stat-num" id="sA">—</div><div class="stat-lbl">Alerts Sent</div></div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs" id="adminTabs">
-    <button class="tab active" data-target="tab-map">🗺 Live Map</button>
-    <button class="tab" data-target="tab-alert">🔔 Send Alert</button>
+    <button class="tab active" data-target="tab-map">🛰️ Live Map</button>
+    <button class="tab" data-target="tab-send">🔔 Send Alert</button>
     <button class="tab" data-target="tab-sightings">📍 Sightings</button>
     <button class="tab" data-target="tab-users">👥 Users</button>
-    <button class="tab" data-target="tab-alerts-list">📋 Alert History</button>
+    <button class="tab" data-target="tab-alerts-list">📋 Alert Log</button>
     <button class="tab" data-target="tab-settings">⚙️ Settings</button>
   </div>
 
-  <!-- ── MAP ───────────────────────────────────── -->
+  <!-- ══ MAP ══════════════════════════════════════════════════════ -->
   <div class="tab-panel active" id="tab-map">
     <div class="card" style="padding:0;overflow:hidden;">
-      <div style="padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
         <div class="live-dot"></div>
-        <span style="font-weight:700;font-size:14px;">Command Map — All Sightings & User Positions</span>
-        <button class="btn btn-secondary btn-sm ml-auto" onclick="refreshAdminMap()">↺ Refresh</button>
-        <button class="btn btn-primary btn-sm" onclick="setMapFromGPS()">📡 Set default from my GPS</button>
+        <span style="font-weight:700;font-size:14px;">Command Map — All Sightings &amp; User Positions</span>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="refreshAdminMap()">↺ Refresh</button>
+          <button class="btn btn-primary btn-sm" onclick="useGPSForDefault()">📡 Set default from my GPS</button>
+        </div>
       </div>
-      <div id="adminMap" class="map-admin" style="border-radius:0;border:none;"></div>
-      <div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text3);align-items:center;">
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:4px;vertical-align:middle;"></span>Sightings</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#6366f1;margin-right:4px;vertical-align:middle;"></span>User locations</span>
-        <span id="adminMapStatus" style="margin-left:auto;"></span>
+      <div id="adminMap" style="height:480px;width:100%;"></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--text4);">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:5px;vertical-align:middle;"></span>Sightings</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4f46e5;margin-right:5px;vertical-align:middle;"></span>User locations</span>
+        <span id="aMapTs" style="margin-left:auto;"></span>
       </div>
     </div>
   </div>
 
-  <!-- ── SEND ALERT ────────────────────────────── -->
-  <div class="tab-panel" id="tab-alert">
+  <!-- ══ SEND ALERT ════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-send">
     <div class="card">
-      <div class="card-title"><div class="cti cti-r">🚨</div>Compose & Broadcast Alert</div>
+      <div class="card-title"><div class="ct-icon cti-r">🚨</div>Compose &amp; Broadcast Alert</div>
       <form method="POST" action="/admin/alert">
         <div class="grid g2">
           <div class="form-group">
-            <label>Alert Title *</label>
-            <input type="text" name="title" placeholder="e.g. Teacher spotted in B Hall!" required>
+            <label>Alert Title <span class="req">*</span></label>
+            <input type="text" name="title" placeholder="e.g. Bezinque spotted in B Hall!" required>
           </div>
           <div class="form-group">
             <label>Severity</label>
@@ -93,45 +92,47 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Area Radius (km) <span style="color:var(--text3);font-weight:400;">optional</span></label>
-            <input type="number" name="radius_km" step="0.1" min="0" placeholder="Leave blank = all users">
+            <label>Radius (km) <span style="font-weight:400;color:var(--text4);">optional</span></label>
+            <input type="number" name="radius_km" step="0.1" min="0" placeholder="Blank = all users">
           </div>
           <div class="form-group" style="grid-column:1/-1;">
-            <label>Message *</label>
-            <textarea name="message" rows="3" placeholder="Be specific — location, direction, anything else useful…" required></textarea>
+            <label>Message <span class="req">*</span></label>
+            <textarea name="message" placeholder="Be specific — location, direction, what they were doing…" required></textarea>
           </div>
           <input type="hidden" name="target_lat" id="aLat">
           <input type="hidden" name="target_lng" id="aLng">
         </div>
-
         <div class="form-group">
-          <label>Optional: Target area (click the map)</label>
-          <div id="alertMap" style="height:240px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);margin-top:6px;"></div>
-          <div class="hint" id="alertMapHint">Click to set a geographic target — leave unchecked for all users.</div>
+          <label>Target Area <span style="font-weight:400;color:var(--text4);">(click map — optional)</span></label>
+          <div id="alertMap" style="height:230px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);margin-top:6px;"></div>
+          <div class="hint" id="aMapHint">Click the map to set a geographic target for this alert.</div>
         </div>
-
-        <button type="submit" class="btn btn-danger btn-lg">🚨 Broadcast Alert to All Users</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <button type="submit" class="btn btn-danger btn-lg">🚨 Broadcast to All Users</button>
+          {% if s.onesignal_app_id %}<span style="font-size:12px;color:var(--green);font-weight:600;">✓ OneSignal push enabled</span>
+          {% else %}<span style="font-size:12px;color:var(--text4);">⚠️ OneSignal not configured — add App ID in Settings for background push</span>{% endif %}
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- ── SIGHTINGS ──────────────────────────────── -->
+  <!-- ══ SIGHTINGS ═════════════════════════════════════════════════ -->
   <div class="tab-panel" id="tab-sightings">
     <div class="card">
-      <div class="card-title"><div class="cti cti-r">📍</div>All Sighting Reports</div>
+      <div class="card-title"><div class="ct-icon cti-r">📍</div>All Sighting Reports</div>
       {% for sight in sightings %}
-      <div class="sight-row {{ sight.status }} {% if loop.first %}latest{% endif %}">
+      <div class="sight-row {{ sight.status }} {% if loop.first %}latest-sighting{% endif %}">
         <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;">
           <div style="flex:1;min-width:180px;">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;">
+            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px;">
               <span class="badge badge-{{ sight.status }}">{{ sight.status }}</span>
-              {% if loop.first %}<span style="font-size:11px;font-weight:700;color:var(--red);">🔴 LATEST</span>{% endif %}
-              <span style="font-size:11px;color:var(--text3);">#{{ sight.id }} · {{ sight.created_at[:16] }}</span>
+              {% if loop.first %}<span style="font-size:11px;font-weight:700;color:var(--red);">🔴 Latest</span>{% endif %}
+              <span style="font-size:11px;color:var(--text4);">#{{ sight.id }} · {{ sight.created_at[:16] }}</span>
             </div>
             {% if sight.address %}<div style="font-size:14px;font-weight:600;">📍 {{ sight.address }}</div>{% endif %}
             {% if sight.description %}<div style="font-size:13px;color:var(--text2);margin-top:2px;">{{ sight.description }}</div>{% endif %}
-            <div style="font-size:11px;color:var(--text3);margin-top:5px;font-family:var(--mono);">
-              by {{ sight.display_name or sight.phone }} · {{ "%.4f"|format(sight.lat) }}, {{ "%.4f"|format(sight.lng) }}
+            <div style="font-size:11.5px;color:var(--text4);margin-top:5px;font-family:var(--mono);">
+              by {{ sight.display_name or sight.phone }} · {{ "%.5f"|format(sight.lat) }}, {{ "%.5f"|format(sight.lng) }}
             </div>
           </div>
           <div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
@@ -139,32 +140,40 @@
             <form method="POST" action="/admin/sighting/{{ sight.id }}"><input type="hidden" name="status" value="reviewed"><button type="submit" class="btn btn-green btn-sm">✓ Confirm</button></form>
             <form method="POST" action="/admin/sighting/{{ sight.id }}"><input type="hidden" name="status" value="dismissed"><button type="submit" class="btn btn-ghost btn-sm">✗ Dismiss</button></form>
             {% endif %}
-            <button class="btn btn-orange btn-sm" onclick="quickAlert('{{ sight.address or (sight.lat|string) }}','{{ sight.lat }}','{{ sight.lng }}')">⚡ Alert</button>
+            <button class="btn btn-secondary btn-sm" onclick="quickAlert('{{ sight.address or sight.lat|string }}','{{ sight.lat }}','{{ sight.lng }}')">⚡ Alert</button>
             <form method="POST" action="/admin/sighting/{{ sight.id }}/delete" onsubmit="return confirm('Delete this sighting?')"><button type="submit" class="btn btn-danger btn-sm">🗑</button></form>
           </div>
         </div>
       </div>
       {% else %}
-      <div style="text-align:center;padding:40px;color:var(--text3);">No sightings yet</div>
+      <div style="text-align:center;padding:40px;color:var(--text4);">
+        <div style="font-size:36px;margin-bottom:10px;">👀</div>
+        <div style="font-weight:600;">No sightings yet</div>
+      </div>
       {% endfor %}
     </div>
   </div>
 
-  <!-- ── USERS ──────────────────────────────────── -->
+  <!-- ══ USERS ═════════════════════════════════════════════════════ -->
   <div class="tab-panel" id="tab-users">
     <div class="card">
-      <div class="card-title"><div class="cti cti-p">👥</div>Registered Users</div>
+      <div class="card-title"><div class="ct-icon cti-p">👥</div>Registered Users</div>
       <div class="tbl-wrap">
         <table>
           <thead><tr><th>Phone</th><th>Display Name</th><th>Status</th><th>Last Location</th><th>Joined</th><th>Actions</th></tr></thead>
           <tbody>
           {% for u in users %}
           <tr>
-            <td class="mono">{{ u.phone }}</td>
-            <td>{{ u.display_name or '—' }}{% if u.is_admin %} <span class="badge badge-admin">Admin</span>{% endif %}</td>
+            <td class="mono" style="font-size:12.5px;">{{ u.phone }}</td>
+            <td style="font-weight:600;">
+              {{ u.display_name or '—' }}
+              {% if u.is_admin %}<span class="badge badge-admin" style="margin-left:4px;">Admin</span>{% endif %}
+            </td>
             <td>{% if u.is_approved %}<span class="badge badge-active">Active</span>{% else %}<span class="badge badge-inactive">Pending</span>{% endif %}</td>
-            <td class="mono" style="font-size:11px;">{% if u.lat %}{{ "%.3f"|format(u.lat) }}, {{ "%.3f"|format(u.lng) }}<br><span style="color:var(--text3);">{{ u.location_updated or '' }}</span>{% else %}—{% endif %}</td>
-            <td>{{ u.created_at[:10] }}</td>
+            <td class="mono" style="font-size:11px;">
+              {% if u.lat %}{{ "%.3f"|format(u.lat) }}, {{ "%.3f"|format(u.lng) }}<br><span style="color:var(--text4);">{{ u.location_updated or '' }}</span>{% else %}—{% endif %}
+            </td>
+            <td style="font-size:12.5px;color:var(--text4);">{{ u.created_at[:10] }}</td>
             <td>
               <div style="display:flex;gap:4px;flex-wrap:wrap;">
                 {% if not u.is_approved %}
@@ -186,36 +195,37 @@
     </div>
   </div>
 
-  <!-- ── ALERT HISTORY ─────────────────────────── -->
+  <!-- ══ ALERT LOG ═════════════════════════════════════════════════ -->
   <div class="tab-panel" id="tab-alerts-list">
     <div class="card">
-      <div class="card-title"><div class="cti cti-o">📋</div>Alert History</div>
+      <div class="card-title"><div class="ct-icon cti-o">📋</div>Alert History</div>
       {% for a in alerts %}
-      <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
-        <span style="font-size:20px;">{{ '🚨' if a.severity=='high' else '⚠️' if a.severity=='medium' else 'ℹ️' }}</span>
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:24px;flex-shrink:0;line-height:1;">{{ '🚨' if a.severity=='high' else '⚠️' if a.severity=='medium' else 'ℹ️' }}</span>
         <div style="flex:1;min-width:0;">
           <div style="font-weight:700;font-size:14px;">{{ a.title }}</div>
-          <div style="font-size:13px;color:var(--text2);margin-top:2px;">{{ a.message }}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <div style="font-size:13px;color:var(--text3);margin-top:3px;">{{ a.message }}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;">
             <span class="badge badge-{{ a.severity }}">{{ a.severity }}</span>
-            <span style="font-size:11px;color:var(--text3);">by {{ a.sent_by or '—' }} · {{ a.created_at[:16] }}</span>
+            <span style="font-size:11.5px;color:var(--text4);">by {{ a.sent_by or '—' }} · {{ a.created_at[:16] }}</span>
           </div>
         </div>
-        <form method="POST" action="/admin/alert/{{ a.id }}/delete" onsubmit="return confirm('Delete this alert?')">
-          <button type="submit" class="btn btn-danger btn-sm" title="Delete alert">🗑 Delete</button>
+        <form method="POST" action="/admin/alert/{{ a.id }}/delete" onsubmit="return confirm('Delete this alert permanently?')">
+          <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
         </form>
       </div>
       {% else %}
-      <div style="text-align:center;padding:40px;color:var(--text3);">No alerts sent yet</div>
+      <div style="text-align:center;padding:40px;color:var(--text4);">No alerts sent yet</div>
       {% endfor %}
     </div>
   </div>
 
-  <!-- ── SETTINGS ───────────────────────────────── -->
+  <!-- ══ SETTINGS ══════════════════════════════════════════════════ -->
   <div class="tab-panel" id="tab-settings">
     <div class="grid g2">
+
       <div class="card" style="grid-column:1/-1;">
-        <div class="card-title"><div class="cti cti-p">⚙️</div>App Settings</div>
+        <div class="card-title"><div class="ct-icon cti-p">⚙️</div>App Settings</div>
         <form method="POST" action="/admin/settings">
           <div class="grid g2">
             <div class="form-group">
@@ -225,26 +235,28 @@
             <div class="form-group">
               <label>Teacher's Name</label>
               <input type="text" name="teacher_name" value="{{ s.teacher_name }}">
+              <div class="hint">Shown as "Where's [Name]?" throughout the app.</div>
             </div>
             <div class="form-group" style="grid-column:1/-1;">
               <label>Banner Description</label>
               <textarea name="teacher_description">{{ s.teacher_description }}</textarea>
             </div>
             <div class="form-group" style="grid-column:1/-1;">
-              <label>Teacher Photo URL <span style="font-weight:400;color:var(--text3);">(optional)</span></label>
+              <label>Teacher Photo URL <span style="font-weight:400;color:var(--text4);">optional</span></label>
               <input type="text" name="teacher_photo_url" value="{{ s.teacher_photo_url }}" placeholder="https://…">
             </div>
+
             <div class="form-group">
               <label>Default Map Latitude</label>
-              <input type="number" step="any" name="map_default_lat" value="{{ s.map_default_lat }}" id="settLat">
+              <input type="number" step="any" name="map_default_lat" value="{{ s.map_default_lat }}" id="sLat">
             </div>
             <div class="form-group">
               <label>Default Map Longitude</label>
-              <input type="number" step="any" name="map_default_lng" value="{{ s.map_default_lng }}" id="settLng">
+              <input type="number" step="any" name="map_default_lng" value="{{ s.map_default_lng }}" id="sLng">
             </div>
             <div class="form-group">
-              <label>Default Zoom Level</label>
-              <input type="number" name="map_default_zoom" value="{{ s.map_default_zoom }}" min="1" max="20" id="settZoom">
+              <label>Default Zoom Level <span style="font-weight:400;color:var(--text4);">1–19</span></label>
+              <input type="number" name="map_default_zoom" value="{{ s.map_default_zoom }}" min="1" max="19" id="sZoom">
             </div>
             <div class="form-group">
               <label>Allow New Registrations</label>
@@ -254,147 +266,190 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Require Approval for New Users</label>
+              <label>Require Admin Approval for New Users</label>
               <select name="require_approval">
                 <option value="0" {% if s.require_approval=='0' %}selected{% endif %}>Auto-approve</option>
                 <option value="1" {% if s.require_approval=='1' %}selected{% endif %}>Manual approval</option>
               </select>
             </div>
           </div>
+
+          <!-- OneSignal -->
+          <div class="divider"></div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">🔔 OneSignal Push Notifications (free)</div>
+          <div class="info" style="margin-bottom:14px;">
+            <strong>Setup:</strong> Create a free account at <a href="https://onesignal.com" target="_blank" style="color:var(--accent);">onesignal.com</a> → New App → Web Push → configure your domain → copy your App ID and REST API Key below. This enables push notifications even when the app is closed.
+          </div>
+          <div class="grid g2">
+            <div class="form-group">
+              <label>OneSignal App ID</label>
+              <input type="text" name="onesignal_app_id" value="{{ s.onesignal_app_id }}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            </div>
+            <div class="form-group">
+              <label>OneSignal REST API Key</label>
+              <input type="text" name="onesignal_api_key" value="{{ s.onesignal_api_key }}" placeholder="Your REST API Key">
+            </div>
+          </div>
+
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
             <button type="submit" class="btn btn-primary">💾 Save Settings</button>
-            <button type="button" class="btn btn-secondary" onclick="fillFromGPS()">📡 Fill map center from my GPS</button>
+            <button type="button" class="btn btn-secondary" onclick="fillGPSToSettings()">📡 Fill map center from my GPS</button>
           </div>
         </form>
       </div>
 
-      <div class="card" style="border-left:3px solid var(--yellow-br);">
-        <div class="card-title"><div class="cti cti-y">🔑</div>Default Admin Login</div>
-        <div style="font-size:13px;color:var(--text2);line-height:2;font-family:var(--mono);">
+      <div class="card" style="border-left:3px solid var(--amber-br);">
+        <div class="card-title"><div class="ct-icon cti-a">🔑</div>Default Admin Credentials</div>
+        <div style="font-family:var(--mono);font-size:13px;line-height:2.2;color:var(--text2);">
           Phone: <strong>0000000000</strong><br>
           Password: <strong>admin123</strong>
         </div>
-        <div class="info-msg mt-8" style="font-size:13px;">⚠️ Change these in the database before going live!</div>
+        <div class="info mt-12" style="font-size:13px;">⚠️ Change these before sharing the app publicly!</div>
       </div>
     </div>
   </div>
+
 </div>
 
 {% block scripts %}
 <script>
-// ── Tabs ──
-document.querySelectorAll('#adminTabs .tab').forEach(t=>{
-  t.addEventListener('click',()=>{
-    document.querySelectorAll('#adminTabs .tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+// ── Tabs
+document.querySelectorAll('#adminTabs .tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#adminTabs .tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
     t.classList.add('active');
     document.getElementById(t.dataset.target).classList.add('active');
-    window.location.hash=t.dataset.target;
-    if(t.dataset.target==='tab-map') setTimeout(initAdminMap,100);
-    if(t.dataset.target==='tab-alert') setTimeout(initAlertMap,100);
+    window.location.hash = t.dataset.target;
+    if (t.dataset.target === 'tab-map')  setTimeout(initAdminMap, 80);
+    if (t.dataset.target === 'tab-send') setTimeout(initAlertMap, 80);
   });
 });
-// Hash nav
-const hash=(window.location.hash||'#tab-map').replace('#','');
-const targetTab=document.querySelector(`[data-target="${hash}"]`);
-if(targetTab) targetTab.click();
+const hash = (window.location.hash || '#tab-map').slice(1);
+const initTab = document.querySelector(`[data-target="${hash}"]`);
+if (initTab) initTab.click();
 
-// ── Stats ──
-fetch('/api/stats').then(r=>r.json()).then(d=>{
-  document.getElementById('sUsers').textContent=d.users;
-  document.getElementById('sSightings').textContent=d.sightings;
-  document.getElementById('sPending').textContent=d.pending;
-  document.getElementById('sAlerts').textContent=d.alerts;
-});
+// ── Stats
+fetch('/api/stats').then(r => r.json()).then(d => {
+  document.getElementById('sU').textContent = d.users;
+  document.getElementById('sS').textContent = d.sightings;
+  document.getElementById('sP').textContent = d.pending;
+  document.getElementById('sA').textContent = d.alerts;
+}).catch(() => {});
 
-// ── Admin Map ──
-let adminMap=null, sMs=[], uMs=[];
-
-function mkIcon(color,size=14,emoji=null){
-  if(emoji) return L.divIcon({html:`<div style="font-size:${size+8}px;transform:translate(-50%,-100%);filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))">${emoji}</div>`,className:'',iconSize:[size,size],iconAnchor:[size/2,size]});
-  return L.divIcon({html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>`,className:'',iconSize:[size,size],iconAnchor:[size/2,size/2]});
+// ── Icon helpers
+function dot(color, size) {
+  return L.divIcon({
+    html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>`,
+    className: '', iconSize: [size, size], iconAnchor: [size/2, size/2]
+  });
+}
+function pin(emoji, size) {
+  return L.divIcon({
+    html: `<div style="font-size:${size}px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.45));transform:translate(-50%,-90%);">${emoji}</div>`,
+    className: '', iconSize: [size, size], iconAnchor: [size/2, size]
+  });
 }
 
-function initAdminMap(){
-  if(adminMap){ adminMap.invalidateSize(); refreshAdminMap(); return; }
-  adminMap=L.map('adminMap').setView([{{ s.map_default_lat }},{{ s.map_default_lng }}],{{ s.map_default_zoom }});
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri',maxZoom:19}).addTo(adminMap);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{attribution:'',maxZoom:19,opacity:.9}).addTo(adminMap);
+// ── Admin Map
+let adminMap = null, sMs = [], uMs = [];
+
+function initAdminMap() {
+  if (adminMap) { adminMap.invalidateSize(); refreshAdminMap(); return; }
+  adminMap = L.map('adminMap').setView([{{ s.map_default_lat }}, {{ s.map_default_lng }}], {{ s.map_default_zoom }});
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { attribution: 'Imagery © Esri', maxZoom: 19 }).addTo(adminMap);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    { attribution: '', maxZoom: 19, opacity: 0.85 }).addTo(adminMap);
   refreshAdminMap();
-  setInterval(refreshAdminMap,15000);
+  setInterval(refreshAdminMap, 18000);
 }
 
-function refreshAdminMap(){
-  if(!adminMap) return;
-  fetch('/api/sightings').then(r=>r.json()).then(data=>{
-    sMs.forEach(m=>adminMap.removeLayer(m)); sMs=[];
-    data.forEach((s,i)=>{
-      const icon=i===0?mkIcon('#ef4444',20,'📍'):mkIcon('#ef4444',14);
-      const m=L.marker([s.lat,s.lng],{icon}).addTo(adminMap)
-        .bindPopup(`<strong>📍 ${s.display_name||'Unknown'}</strong><br>${s.address||''}<br><em style="color:#475569">${s.description||''}</em><br><small style="color:#94a3b8">${s.created_at.slice(0,16)}</small>`);
+function refreshAdminMap() {
+  if (!adminMap) return;
+  // Sightings
+  fetch('/api/sightings').then(r => r.json()).then(data => {
+    sMs.forEach(m => adminMap.removeLayer(m)); sMs = [];
+    data.forEach((s, i) => {
+      const icon = (i === 0) ? pin('📍', 32) : dot('#ef4444', 15);
+      const m = L.marker([s.lat, s.lng], { icon }).addTo(adminMap).bindPopup(
+        `<strong style="color:#ea580c;">📍 ${s.display_name || 'Unknown'}</strong><br>${s.address || ''}<br><em style="font-size:12px;color:#64748b;">${s.description || ''}</em><br><small style="color:#94a3b8;">${s.created_at.slice(0,16)} · ${s.status}</small>`
+      );
       sMs.push(m);
     });
-  });
-  fetch('/api/users/locations').then(r=>r.json()).then(data=>{
-    uMs.forEach(m=>adminMap.removeLayer(m)); uMs=[];
-    data.forEach(u=>{
-      const m=L.marker([u.lat,u.lng],{icon:mkIcon('#6366f1',13)}).addTo(adminMap)
-        .bindPopup(`<strong style="color:#6366f1">👤 ${u.display_name||u.phone}</strong><br><small style="color:#94a3b8">${u.location_updated||''}</small>`);
+  }).catch(() => {});
+
+  // User locations
+  fetch('/api/users/locations').then(r => r.json()).then(data => {
+    uMs.forEach(m => adminMap.removeLayer(m)); uMs = [];
+    data.forEach(u => {
+      const m = L.marker([u.lat, u.lng], { icon: dot(u.is_admin ? '#7c3aed' : '#4f46e5', 12) })
+        .addTo(adminMap)
+        .bindPopup(`<strong style="color:#4f46e5;">👤 ${u.display_name || u.phone}</strong>${u.is_admin ? ' <em style="color:#7c3aed;">(admin)</em>' : ''}<br><small style="color:#94a3b8;">${u.location_updated || ''}</small>`);
       uMs.push(m);
     });
-    document.getElementById('adminMapStatus').textContent='Updated '+new Date().toLocaleTimeString();
+    document.getElementById('aMapTs').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  }).catch(() => {});
+}
+
+function useGPSForDefault() {
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat  = pos.coords.latitude;
+    const lng  = pos.coords.longitude;
+    const zoom = adminMap ? adminMap.getZoom() : 16;
+    fetch('/admin/set-map-location', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lat, lng, zoom })
+    }).then(r => r.json()).then(d => {
+      if (d.ok) {
+        if (adminMap) adminMap.setView([lat, lng], zoom);
+        document.getElementById('aMapTs').textContent = `✓ Default set to ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      }
+    });
+  }, () => alert('GPS not available on this device.'));
+}
+
+// ── Alert Map
+let alertMap = null, alertCircle = null;
+
+function initAlertMap() {
+  if (alertMap) { alertMap.invalidateSize(); return; }
+  alertMap = L.map('alertMap').setView([{{ s.map_default_lat }}, {{ s.map_default_lng }}], {{ s.map_default_zoom }});
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { attribution: '© Esri', maxZoom: 19 }).addTo(alertMap);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    { attribution: '', maxZoom: 19, opacity: 0.85 }).addTo(alertMap);
+  alertMap.on('click', e => {
+    document.getElementById('aLat').value = e.latlng.lat;
+    document.getElementById('aLng').value = e.latlng.lng;
+    document.getElementById('aMapHint').innerHTML = `<span style="color:var(--green);font-weight:600;">✓ Target: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}</span>`;
+    if (alertCircle) alertMap.removeLayer(alertCircle);
+    alertCircle = L.circle(e.latlng, { color: '#ef4444', fillColor: '#ef4444', fillOpacity: .12, radius: 800 }).addTo(alertMap);
   });
 }
 
-function setMapFromGPS(){
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const lat=pos.coords.latitude, lng=pos.coords.longitude;
-    const zoom=adminMap?adminMap.getZoom():15;
-    fetch('/admin/set-map-location',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat,lng,zoom})})
-      .then(r=>r.json()).then(d=>{
-        if(d.ok){
-          document.getElementById('adminMapStatus').textContent=`✓ Default set to ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-          if(adminMap) adminMap.setView([lat,lng],zoom);
-        }
-      });
-  },()=>alert('GPS not available'));
+function quickAlert(loc, lat, lng) {
+  document.querySelector('[data-target="tab-send"]').click();
+  setTimeout(() => {
+    document.querySelector('input[name=title]').value   = `📍 {{ s.teacher_name }} spotted — ${loc}`;
+    document.querySelector('textarea[name=message]').value = `Confirmed sighting at ${loc}. Stay alert!`;
+    document.querySelector('select[name=severity]').value  = 'high';
+    document.querySelector('select[name=alert_type]').value = 'sighting';
+    document.getElementById('aLat').value = lat;
+    document.getElementById('aLng').value = lng;
+  }, 120);
 }
 
-// ── Alert Map ──
-let alertMap=null, alertCircle=null;
-function initAlertMap(){
-  if(alertMap){ alertMap.invalidateSize(); return; }
-  alertMap=L.map('alertMap').setView([{{ s.map_default_lat }},{{ s.map_default_lng }}],{{ s.map_default_zoom }});
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:19}).addTo(alertMap);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{attribution:'',maxZoom:19,opacity:.9}).addTo(alertMap);
-  alertMap.on('click',e=>{
-    document.getElementById('aLat').value=e.latlng.lat;
-    document.getElementById('aLng').value=e.latlng.lng;
-    document.getElementById('alertMapHint').innerHTML=`<span style="color:var(--green);font-weight:600;">✓ Target: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}</span>`;
-    if(alertCircle) alertMap.removeLayer(alertCircle);
-    alertCircle=L.circle(e.latlng,{color:'#ef4444',fillColor:'#ef4444',fillOpacity:.12,radius:800}).addTo(alertMap);
-  });
+function fillGPSToSettings() {
+  navigator.geolocation.getCurrentPosition(pos => {
+    document.getElementById('sLat').value  = pos.coords.latitude.toFixed(6);
+    document.getElementById('sLng').value  = pos.coords.longitude.toFixed(6);
+  }, () => alert('GPS not available.'));
 }
 
-function quickAlert(loc,lat,lng){
-  document.querySelector('[data-target="tab-alert"]').click();
-  document.querySelector('input[name=title]').value=`📍 Teacher spotted — ${loc}`;
-  document.querySelector('textarea[name=message]').value=`Sighting confirmed at ${loc}. Stay alert!`;
-  document.querySelector('select[name=severity]').value='high';
-  document.querySelector('select[name=alert_type]').value='sighting';
-  document.getElementById('aLat').value=lat;
-  document.getElementById('aLng').value=lng;
-}
-
-function fillFromGPS(){
-  navigator.geolocation.getCurrentPosition(pos=>{
-    document.getElementById('settLat').value=pos.coords.latitude.toFixed(6);
-    document.getElementById('settLng').value=pos.coords.longitude.toFixed(6);
-  },()=>alert('GPS not available'));
-}
-
-// Init map on load if already active
-setTimeout(()=>{ if(document.getElementById('tab-map').classList.contains('active')) initAdminMap(); },200);
+// Init map on load if active
+setTimeout(() => { if (document.getElementById('tab-map').classList.contains('active')) initAdminMap(); }, 180);
 </script>
 {% endblock %}
 {% endblock %}
