@@ -1,203 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Live Map — {{ s.app_name }}{% endblock %}
-
-{% block head %}
-<style>
-  .subject-banner {
-    background: linear-gradient(135deg, rgba(255,34,68,0.12), rgba(255,107,0,0.08));
-    border: 1px solid rgba(255,34,68,0.3);
-    border-radius: 4px; padding: 16px 20px;
-    display: flex; align-items: center; gap: 16px;
-    margin-bottom: 20px;
-  }
-  .subject-photo {
-    width: 60px; height: 60px; border-radius: 50%;
-    border: 2px solid var(--accent);
-    object-fit: cover; flex-shrink: 0;
-    background: var(--bg2);
-  }
-  .subject-photo-placeholder {
-    width: 60px; height: 60px; border-radius: 50%;
-    border: 2px solid var(--accent);
-    background: var(--bg2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; flex-shrink: 0; color: var(--text3);
-  }
-  .blink { animation: blink .8s step-end infinite; }
-  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
-  #locationStatus { font-family:var(--mono); font-size:11px; color:var(--text3); }
-</style>
-{% endblock %}
-
+{% block title %}Create Account — {{ s.app_name }}{% endblock %}
 {% block content %}
-<div class="container">
-  <!-- Subject Banner -->
-  <div class="subject-banner">
-    <div class="subject-photo-placeholder">⚑</div>
-    <div>
-      <div style="font-family:var(--head); font-size:22px; font-weight:900; text-transform:uppercase; letter-spacing:2px; color:var(--danger);">
-        <span class="blink">▌</span> Where is: {{ s.subject_name }}?
-      </div>
-      <div style="font-size:13px; color:var(--text2); margin-top:4px; max-width:600px;">{{ s.subject_description }}</div>
-    </div>
-    <a href="/report" class="btn btn-danger" style="margin-left:auto; flex-shrink:0;">⚑ REPORT SIGHTING</a>
-  </div>
-
-  <!-- Recent Alerts -->
-  {% if alerts %}
-  <div class="card" style="border-color:rgba(255,107,0,0.3);">
-    <div class="card-header" style="color:var(--accent);">Recent Alerts</div>
-    {% for alert in alerts[:3] %}
-    <div style="display:flex; align-items:flex-start; gap:12px; padding: 10px 0; border-bottom: 1px solid var(--border);">
-      <span class="badge badge-{{ alert.severity }}">{{ alert.severity|upper }}</span>
-      <div>
-        <div style="font-weight:600; font-size:14px;">{{ alert.title }}</div>
-        <div style="font-size:12px; color:var(--text2); margin-top:2px;">{{ alert.message }}</div>
-        <div style="font-family:var(--mono); font-size:10px; color:var(--text3); margin-top:4px;">{{ alert.created_at }}</div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  <div class="grid grid-2" style="gap:16px;">
-    <!-- Live Map -->
-    <div class="card" style="grid-column: 1 / -1;">
-      <div class="card-header">
-        <span class="dot-live"></span>Live Sightings Map
-        <span id="locationStatus" style="margin-left:auto;"></span>
-      </div>
-      <div class="map-container" id="map"></div>
-      <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
-        <button class="btn btn-secondary btn-sm" onclick="shareMyLocation()">◎ Share My Location</button>
-        <button class="btn btn-sm" style="border-color:var(--text3); color:var(--text3);" onclick="loadSightings()">↺ Refresh</button>
-        <div style="margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--text3); align-self:center;" id="lastUpdated"></div>
-      </div>
+<div style="min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:28px 20px;">
+  <div style="width:100%;max-width:420px;">
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#ea580c,#f97316);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 18px;box-shadow:0 4px 18px rgba(234,88,12,.28);">🆕</div>
+      <h1 style="font-size:26px;font-weight:800;letter-spacing:-.5px;">Join the hunt</h1>
+      <p style="color:var(--text4);font-size:14px;margin-top:5px;">Your phone number = your login. Alerts go straight to you.</p>
     </div>
 
-    <!-- Recent Sightings List -->
-    <div class="card">
-      <div class="card-header">Recent Reports</div>
-      <div id="sightingsList" style="max-height:300px; overflow-y:auto;">
-        {% for s2 in sightings %}
-        <div style="padding:10px 0; border-bottom:1px solid var(--border);">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-            <span class="badge badge-{{ s2.status }}">{{ s2.status }}</span>
-            <span style="font-family:var(--mono); font-size:10px; color:var(--text3);">{{ s2.created_at[:16] }}</span>
-          </div>
-          {% if s2.address %}
-          <div style="font-size:13px; color:var(--text2);">📍 {{ s2.address }}</div>
-          {% endif %}
-          {% if s2.description %}
-          <div style="font-size:12px; color:var(--text);">{{ s2.description }}</div>
-          {% endif %}
-          <div style="font-family:var(--mono); font-size:10px; color:var(--text3); margin-top:2px;">by {{ s2.display_name or s2.phone }}</div>
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+
+    <div class="card" style="padding:28px;">
+      <form method="POST">
+        <div class="form-group">
+          <label>Phone Number <span class="req">*</span></label>
+          <input type="tel" name="phone" placeholder="(555) 000-0000" autocomplete="tel" autofocus required style="font-size:15px;">
+          <div class="hint">This becomes your username. SMS alerts will be sent here.</div>
         </div>
-        {% else %}
-        <div style="text-align:center; padding:30px; color:var(--text3); font-family:var(--mono); font-size:12px;">NO REPORTS YET</div>
-        {% endfor %}
-      </div>
+        <div class="form-group">
+          <label>Display Name <span style="color:var(--text4);font-weight:400;">(optional)</span></label>
+          <input type="text" name="display_name" placeholder="e.g. Alex or Room 204" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label>Password <span class="req">*</span></label>
+          <input type="password" name="password" id="pw1" placeholder="At least 6 characters" autocomplete="new-password" required minlength="6" style="font-size:15px;">
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label>Confirm Password <span class="req">*</span></label>
+          <input type="password" id="pw2" placeholder="Repeat password" required style="font-size:15px;">
+          <div class="hint" id="pwHint"></div>
+        </div>
+        <button type="submit" class="btn btn-orange btn-block btn-lg">Create account →</button>
+      </form>
     </div>
 
-    <!-- My Info -->
-    <div class="card">
-      <div class="card-header">My Status</div>
-      <div class="form-group">
-        <label>My Phone (Username)</label>
-        <div class="mono" style="padding:10px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:2px;">
-          {{ user.phone }}
-        </div>
-      </div>
-      {% if user.display_name %}
-      <div class="form-group">
-        <label>Display Name</label>
-        <div class="mono" style="padding:10px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:2px;">{{ user.display_name }}</div>
-      </div>
-      {% endif %}
-      {% if user.lat %}
-      <div class="form-group">
-        <label>Last Shared Location</label>
-        <div class="mono" style="padding:10px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:2px;">
-          {{ "%.4f"|format(user.lat) }}, {{ "%.4f"|format(user.lng) }}<br>
-          <span style="color:var(--text3); font-size:10px;">{{ user.location_updated or 'Unknown' }}</span>
-        </div>
-      </div>
-      {% endif %}
-      <a href="/report" class="btn btn-danger btn-block" style="margin-top:12px;">⚑ FILE A REPORT</a>
-    </div>
+    <p style="text-align:center;margin-top:20px;font-size:14px;color:var(--text3);">
+      Already have an account? <a href="/login" style="color:var(--accent);font-weight:700;text-decoration:none;">Sign in →</a>
+    </p>
   </div>
 </div>
-
 {% block scripts %}
 <script>
-const mapDef = { lat: {{ s.map_default_lat }}, lng: {{ s.map_default_lng }}, zoom: {{ s.map_default_zoom }} };
-
-// Custom dark tile
-const map = L.map('map').setView([mapDef.lat, mapDef.lng], mapDef.zoom);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '©OpenStreetMap ©CartoDB', subdomains: 'abcd', maxZoom: 19
-}).addTo(map);
-
-// Custom icon
-const sightingIcon = L.divIcon({
-  html: '<div style="background:var(--accent,#ff6b00);width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 8px rgba(255,107,0,0.8);"></div>',
-  className: '', iconSize: [14,14], iconAnchor: [7,7]
-});
-const myIcon = L.divIcon({
-  html: '<div style="background:#00d4ff;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 8px rgba(0,212,255,0.8);"></div>',
-  className: '', iconSize: [12,12], iconAnchor: [6,6]
-});
-
-let sightingMarkers = [];
-
-function loadSightings() {
-  fetch('/api/sightings')
-    .then(r => r.json())
-    .then(data => {
-      sightingMarkers.forEach(m => map.removeLayer(m));
-      sightingMarkers = [];
-      data.forEach(s => {
-        const m = L.marker([s.lat, s.lng], {icon: sightingIcon})
-          .addTo(map)
-          .bindPopup(`
-            <div style="font-family:monospace; font-size:12px; background:#0d1220; color:#c8d8f0; padding:8px; min-width:180px;">
-              <strong style="color:#ff6b00;">⚑ SIGHTING REPORT</strong><br>
-              ${s.address ? '📍 ' + s.address + '<br>' : ''}
-              ${s.description || 'No description'}<br>
-              <small style="color:#7890b0;">by ${s.display_name || 'Unknown'} · ${s.created_at.slice(0,16)}</small>
-            </div>
-          `);
-        sightingMarkers.push(m);
-      });
-      document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
-    });
-}
-loadSightings();
-setInterval(loadSightings, 30000);
-
-let myMarker = null;
-function shareMyLocation() {
-  const status = document.getElementById('locationStatus');
-  status.textContent = 'Getting location...';
-  navigator.geolocation.getCurrentPosition(pos => {
-    const lat = pos.coords.latitude, lng = pos.coords.longitude;
-    fetch('/my-location', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({lat, lng})
-    }).then(() => {
-      status.textContent = '✓ Location shared';
-      if (myMarker) map.removeLayer(myMarker);
-      myMarker = L.marker([lat, lng], {icon: myIcon})
-        .addTo(map)
-        .bindPopup('<div style="font-family:monospace;font-size:12px;background:#0d1220;color:#00d4ff;padding:6px;">YOU ARE HERE</div>')
-        .openPopup();
-      map.setView([lat, lng], 14);
-    });
-  }, () => {
-    status.textContent = '✗ Location denied';
-  });
-}
+const p1=document.getElementById('pw1'),p2=document.getElementById('pw2'),h=document.getElementById('pwHint');
+p2.oninput=()=>{
+  if(!p2.value){h.textContent='';return;}
+  if(p2.value===p1.value){h.style.color='var(--green)';h.textContent='✓ Passwords match';}
+  else{h.style.color='var(--red)';h.textContent='✗ Passwords do not match';}
+};
+document.querySelector('form').onsubmit=e=>{if(p1.value!==p2.value){e.preventDefault();alert('Passwords do not match.');}};
 </script>
 {% endblock %}
 {% endblock %}
