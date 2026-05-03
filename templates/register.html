@@ -1,21 +1,19 @@
 {% extends "base.html" %}
 {% block title %}Join — {{ s.app_name }}{% endblock %}
 {% block content %}
-<div style="min-height:calc(100vh - 62px);display:flex;align-items:center;justify-content:center;padding:28px 20px;">
-  <div style="width:100%;max-width:410px;">
-    <div style="text-align:center;margin-bottom:28px;">
-      <div style="width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,#ea580c,#f97316);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;box-shadow:0 4px 16px rgba(234,88,12,.25);">🙋</div>
-      <h1 style="font-size:24px;font-weight:800;letter-spacing:-.4px;">Join the hunt!</h1>
-      <p style="color:var(--text4);font-size:14px;margin-top:4px;">Your phone number = your username. Alerts come straight to you.</p>
+<div style="min-height:calc(100dvh - var(--nav-h) - var(--sat));display:flex;align-items:center;justify-content:center;padding:28px 18px;">
+  <div style="width:100%;max-width:400px;">
+    <div style="text-align:center;margin-bottom:26px;">
+      <div style="width:56px;height:56px;border-radius:15px;background:linear-gradient(135deg,#ea580c,#f97316);display:flex;align-items:center;justify-content:center;font-size:25px;margin:0 auto 13px;box-shadow:0 4px 14px rgba(234,88,12,.22);">🙋</div>
+      <h1 style="font-size:22px;font-weight:800;letter-spacing:-.4px;">Join the hunt!</h1>
+      <p style="color:var(--text4);font-size:13.5px;margin-top:4px;">Your phone # = your login. Alerts come straight to you.</p>
     </div>
-
     {% if error %}<div class="err">{{ error }}</div>{% endif %}
-
-    <div class="card" style="padding:24px;">
+    <div class="card" style="padding:22px;">
       <form method="POST">
         <div class="form-group">
           <label>📱 Phone Number <span class="req">*</span></label>
-          <input type="tel" name="phone" placeholder="(555) 000-0000" autocomplete="tel" autofocus required style="font-size:15px;">
+          <input type="tel" name="phone" placeholder="(555) 000-0000" autocomplete="tel" autofocus required>
           <div class="hint">This is your login. Alerts will come here.</div>
         </div>
         <div class="form-group">
@@ -24,18 +22,17 @@
         </div>
         <div class="form-group">
           <label>🔑 Password <span class="req">*</span></label>
-          <input type="password" name="password" id="pw1" placeholder="At least 6 chars" autocomplete="new-password" required minlength="6" style="font-size:15px;">
+          <input type="password" name="password" id="pw1" placeholder="At least 6 chars" autocomplete="new-password" required minlength="6">
         </div>
         <div class="form-group" style="margin-bottom:18px;">
           <label>🔑 Confirm Password <span class="req">*</span></label>
-          <input type="password" id="pw2" placeholder="Same thing again" required style="font-size:15px;">
+          <input type="password" id="pw2" placeholder="Same thing again" required>
           <div class="hint" id="pwHint"></div>
         </div>
         <button type="submit" class="btn btn-orange btn-block btn-lg">I'm in! →</button>
       </form>
     </div>
-
-    <p style="text-align:center;margin-top:18px;font-size:14px;color:var(--text3);">
+    <p style="text-align:center;margin-top:16px;font-size:13.5px;color:var(--text3);">
       Already signed up? <a href="/login" style="color:var(--accent);font-weight:700;text-decoration:none;">Sign in →</a>
     </p>
   </div>
@@ -45,8 +42,8 @@
 const p1=document.getElementById('pw1'),p2=document.getElementById('pw2'),h=document.getElementById('pwHint');
 p2.oninput=()=>{
   if(!p2.value){h.textContent='';return;}
-  if(p2.value===p1.value){h.style.color='var(--green)';h.textContent='✅ Passwords match!';}
-  else{h.style.color='var(--red)';h.textContent='❌ Passwords don\'t match';}
+  if(p2.value===p1.value){h.style.color='var(--green)';h.textContent='✅ Match!';}
+  else{h.style.color='var(--red)';h.textContent='❌ No match';}
 };
 document.querySelector('form').onsubmit=e=>{if(p1.value!==p2.value){e.preventDefault();alert('Passwords don\'t match!');}};
 </script>
