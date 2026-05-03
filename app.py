@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file, make_response
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file, make_response, g
 import sqlite3, hashlib, os, urllib.request, json, base64, io
 from functools import wraps
 
@@ -55,7 +55,7 @@ def init_db():
     defaults = {
         "app_name":           "Where Bazinc",
         "teacher_name":       "Bezinque",
-        "teacher_description":"Spot her? Drop a pin ASAP!! 👀",
+        "teacher_description":"Spot her?? Drop a pin ASAP!! 👀",
         "teacher_photo_url":  "",
         "map_default_lat":    "39.5501",
         "map_default_lng":    "-105.7821",
@@ -63,6 +63,8 @@ def init_db():
         "allow_registration": "1",
         "require_approval":   "0",
         "app_logo_b64":       "",
+        "lockdown_mode":      "0",
+        "lockdown_secret":    "thisisfun",
     }
     for k, v in defaults.items():
         db.execute("INSERT OR IGNORE INTO settings (key,value) VALUES (?,?)", (k, v))
@@ -85,6 +87,29 @@ def get_setting(key, default=""):
 
 def hash_pw(pw): return hashlib.sha256(pw.encode()).hexdigest()
 
+# ── LOCKDOWN MIDDLEWARE ────────────────────────────────────────────────
+ALWAYS_ALLOW = {"/video-unavailable", "/favicon.ico", "/favicon.png",
+                "/manifest.json", "/sw.js", "/OneSignalSDKWorker.js"}
+
+@app.before_request
+def lockdown_check():
+    # Let static files through always
+    if request.path.startswith("/static"):
+        return None
+    # Check lockdown
+    lockdown = get_setting("lockdown_mode", "0")
+    if lockdown != "1":
+        return None
+    # Always-allowed paths
+    if request.path in ALWAYS_ALLOW:
+        return None
+    # Secret unlock path: /<lockdown_secret>
+    secret = get_setting("lockdown_secret", "thisisfun")
+    if request.path.lstrip("/") == secret:
+        return None
+    # Everything else → fake error page
+    return redirect("/video-unavailable")
+
 # ── ONESIGNAL PUSH ─────────────────────────────────────────────────────
 def push(title, message, severity="medium", url="/dashboard"):
     emoji   = {"high": "🚨", "medium": "⚠️", "low": "ℹ️"}.get(severity, "📢")
@@ -95,18 +120,27 @@ def push(title, message, severity="medium", url="/dashboard"):
         "contents":          {"en": message},
         "url":               url,
         "chrome_web_icon":   "/static/icons/icon-192.png",
-        "priority":          10 if severity == "high" else 5,
+        "web_push_topic":    "wherebazinc-alert",
     }).encode()
     req = urllib.request.Request(
-        "https://onesignal.com/api/v1/notifications", data=payload,
-        headers={"Content-Type":"application/json","Authorization":f"Basic {ONESIGNAL_API_KEY}"},
+        "https://onesignal.com/api/v1/notifications",
+        data=payload,
+        headers={
+            "Content-Type":  "application/json",
+            "Authorization": f"Key {ONESIGNAL_API_KEY}",
+        },
         method="POST"
     )
     try:
-        urllib.request.urlopen(req, timeout=8)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            body = resp.read().decode()
+            print(f"[OneSignal] {resp.status}: {body[:200]}")
         return True
+    except urllib.error.HTTPError as e:
+        print(f"[OneSignal] HTTP {e.code}: {e.read().decode()[:300]}")
+        return False
     except Exception as e:
-        print("OneSignal push error:", e)
+        print(f"[OneSignal] Error: {e}")
         return False
 
 # ── AUTH ───────────────────────────────────────────────────────────────
@@ -128,12 +162,52 @@ def admin_required(f):
         return f(*a, **kw)
     return dec
 
+# ── SPECIAL ROUTES ─────────────────────────────────────────────────────
+@app.route("/video-unavailable")
+def fake_error():
+    return render_template("fake_error.html")
+
+@app.route("/<path:secret_key>")
+def lockdown_secret_page(secret_key):
+    real_secret = get_setting("lockdown_secret", "thisisfun")
+    if secret_key != real_secret:
+        # Not a real route, 404 it
+        from flask import abort
+        abort(404)
+    return render_template("lockdown.html", s=get_settings())
+
+@app.route("/admin/lockdown-toggle", methods=["POST"])
+def lockdown_toggle():
+    # Accessible even from the secret page — no full admin_required check
+    # but we need SOME auth check
+    secret = get_setting("lockdown_secret","thisisfun")
+    provided = request.form.get("secret","")
+    if provided != secret:
+        return "nope", 403
+    current = get_setting("lockdown_mode","0")
+    new_val  = "0" if current == "1" else "1"
+    db = get_db()
+    db.execute("INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)", ("lockdown_mode", new_val))
+    db.commit(); db.close()
+    return redirect(f"/{secret}")
+
+@app.route("/admin/lockdown-settings", methods=["POST"])
+@admin_required
+def lockdown_settings():
+    new_secret = request.form.get("lockdown_secret","").strip()
+    if new_secret and len(new_secret) >= 4:
+        db = get_db()
+        db.execute("INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)", ("lockdown_secret", new_secret))
+        db.commit(); db.close()
+    return redirect(url_for("admin_dashboard") + "#tab-settings")
+
 # ── STATIC ONESIGNAL WORKER ────────────────────────────────────────────
 @app.route("/OneSignalSDKWorker.js")
 def onesignal_worker():
     resp = make_response('importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");')
-    resp.headers["Content-Type"]  = "application/javascript"
+    resp.headers["Content-Type"]           = "application/javascript"
     resp.headers["Service-Worker-Allowed"] = "/"
+    resp.headers["Cache-Control"]          = "no-cache"
     return resp
 
 # ── FAVICON / LOGO ─────────────────────────────────────────────────────
@@ -142,8 +216,8 @@ def onesignal_worker():
 def favicon():
     logo = get_setting("app_logo_b64","")
     if logo:
-        data   = base64.b64decode(logo.split(",",1)[-1])
-        mime   = "image/png" if logo.startswith("data:image/png") else "image/jpeg"
+        data = base64.b64decode(logo.split(",",1)[-1])
+        mime = "image/png" if "png" in logo else "image/jpeg"
         return send_file(io.BytesIO(data), mimetype=mime)
     return redirect("/static/icons/icon-192.png")
 
@@ -165,7 +239,7 @@ def register():
         if len(phone) < 10:
             return render_template("register.html", s=s, error="Need a real 10-digit number!")
         if len(pw) < 6:
-            return render_template("register.html", s=s, error="Password needs to be at least 6 characters.")
+            return render_template("register.html", s=s, error="Password needs at least 6 characters.")
         db = get_db()
         if db.execute("SELECT id FROM users WHERE phone=?", (phone,)).fetchone():
             db.close()
@@ -191,10 +265,11 @@ def login():
         if not u:              return render_template("login.html", s=s, error="Wrong number or password!", msg="")
         if not u["is_approved"]: return render_template("login.html", s=s, error="Not approved yet — bug the admin!", msg="")
         session.update({
-            "user_id":  u["id"],
-            "is_admin": bool(u["is_admin"]),
-            "phone":    u["phone"],
-            "disp_name":u["display_name"] or u["phone"]
+            "user_id":      u["id"],
+            "is_admin":     bool(u["is_admin"]),
+            "phone":        u["phone"],
+            "disp_name":    u["display_name"] or u["phone"],
+            "first_login":  True,
         })
         return redirect(url_for("admin_dashboard") if u["is_admin"] else url_for("dashboard"))
     return render_template("login.html", s=s, error="", msg=msg)
@@ -215,11 +290,12 @@ def dashboard():
     alerts = db.execute(
         "SELECT a.* FROM alerts a WHERE a.id NOT IN "
         "(SELECT alert_id FROM alert_acks WHERE user_id=?) "
-        "ORDER BY a.created_at DESC LIMIT 10", (session["user_id"],)
+        "ORDER BY a.created_at DESC LIMIT 6", (session["user_id"],)
     ).fetchall()
+    first_login = session.pop("first_login", False)
     db.close()
     return render_template("dashboard.html", s=get_settings(), user=user,
-                           sightings=sightings, alerts=alerts)
+                           sightings=sightings, alerts=alerts, first_login=first_login)
 
 @app.route("/report", methods=["GET","POST"])
 @login_required
@@ -238,7 +314,7 @@ def report():
         db.execute("INSERT INTO sightings (user_id,lat,lng,description,address) VALUES (?,?,?,?,?)",
                    (session["user_id"], float(lat), float(lng), desc, addr))
         title   = f"🚨 {s.get('teacher_name','Teacher')} spotted!!"
-        message = f"{reporter} saw them at {loc_str}. {desc}".strip().rstrip(".") + "!"
+        message = f"{reporter} saw them at {loc_str}. {desc}".strip().rstrip("!.") + "!"
         db.execute(
             "INSERT INTO alerts (admin_id,title,message,alert_type,severity,target_lat,target_lng) VALUES (?,?,?,?,?,?,?)",
             (session["user_id"], title, message, "sighting", "high", float(lat), float(lng))
@@ -315,12 +391,11 @@ def admin_settings():
 def upload_logo():
     file = request.files.get("logo")
     if file and file.filename:
-        data   = file.read()
-        mime   = file.content_type or "image/png"
-        b64    = f"data:{mime};base64," + base64.b64encode(data).decode()
-        db     = get_db()
+        data = file.read()
+        mime = file.content_type or "image/png"
+        b64  = f"data:{mime};base64," + base64.b64encode(data).decode()
+        db   = get_db()
         db.execute("INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)", ("app_logo_b64", b64))
-        # Also update teacher photo to this upload
         db.execute("INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)", ("teacher_photo_url", b64))
         db.commit(); db.close()
     return redirect(url_for("admin_dashboard") + "#tab-settings")
@@ -469,11 +544,10 @@ def manifest():
         {"src":"/static/icons/icon-512.png","sizes":"512x512","type":"image/png"}
     ]
     if logo:
-        icons = [{"src":"/favicon.png","sizes":"192x192","type":"image/png"},
-                 {"src":"/favicon.png","sizes":"512x512","type":"image/png"}] + icons
+        icons = [{"src":"/favicon.png","sizes":"any","type":"image/png"}] + icons
     return jsonify({
         "name": name, "short_name": name, "start_url": "/",
-        "display": "standalone",
+        "display": "standalone", "orientation": "portrait-primary",
         "background_color": "#f5f6fa", "theme_color": "#4f46e5",
         "icons": icons
     })
