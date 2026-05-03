@@ -2,275 +2,363 @@
 {% block title %}Where's {{ s.teacher_name }}? — {{ s.app_name }}{% endblock %}
 {% block head %}
 <style>
-.teacher-banner{
-  background:linear-gradient(135deg,#fff7ed,#fef2f2);
-  border:1.5px solid rgba(234,88,12,.18);
-  border-radius:var(--r-lg);padding:16px 20px;
-  display:flex;align-items:center;gap:16px;margin-bottom:18px;
+/* ── DASHBOARD LAYOUT ─────────────────────────────
+   Map takes up the full remaining viewport height.
+   On mobile: full-width stacked layout.
+   On desktop: map + sidebar side by side.
+────────────────────────────────────────────────── */
+
+.dash-wrap {
+  display: flex;
+  flex-direction: column;
+  /* Fill all space below the navbar */
+  height: calc(100dvh - var(--nav-h) - var(--sat));
+  /* Fallback for browsers without dvh */
+  height: calc(100vh - var(--nav-h) - var(--sat));
+  overflow: hidden;
 }
-.teacher-ava{
-  width:52px;height:52px;border-radius:50%;
-  border:2.5px solid var(--orange);
-  display:flex;align-items:center;justify-content:center;
-  font-size:26px;background:#fff;flex-shrink:0;
-  box-shadow:0 2px 8px rgba(234,88,12,.18);
-  overflow:hidden;
+
+/* Scrollable top section (banner + alerts) */
+.dash-top {
+  flex-shrink: 0;
+  padding: 12px 14px 0;
+  padding-left: calc(14px + var(--sal));
+  padding-right: calc(14px + var(--sar));
+  overflow-y: auto;
+  max-height: 35vh; /* never take more than 35% so map always visible */
 }
-.teacher-ava img{width:100%;height:100%;object-fit:cover;}
-.sight-item{
-  background:var(--bg3);border:1.5px solid var(--border);
-  border-radius:var(--r);padding:11px 13px;
-  transition:box-shadow .15s;
+
+/* Map area fills the rest */
+.dash-map-area {
+  flex: 1;
+  min-height: 0; /* critical for flex child to shrink */
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px;
+  padding-left: calc(14px + var(--sal));
+  padding-right: calc(14px + var(--sar));
+  padding-bottom: calc(10px + var(--sab));
+  gap: 10px;
 }
-.sight-item:hover{box-shadow:var(--sh-md);}
+
+/* Desktop: map + sidebar side by side */
+@media(min-width: 768px) {
+  .dash-map-area { flex-direction: row; }
+  .dash-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+  }
+}
+
+/* Mobile: full-width map, sidebar below */
+@media(max-width: 767px) {
+  .dash-map-area { flex-direction: column; }
+  .dash-sidebar {
+    flex-shrink: 0;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .dash-top { max-height: 45vw; }
+}
+
+/* The map card itself */
+.map-card {
+  flex: 1;
+  min-height: 0;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.map-card-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+/* The actual Leaflet map div — fills all remaining space */
+#map {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  /* Absolute fallback minimum */
+  min-height: 200px;
+}
+.map-legend {
+  flex-shrink: 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 8px 13px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--text4);
+  background: var(--bg2);
+}
+
+/* Teacher banner */
+.teacher-banner {
+  background: linear-gradient(135deg,#fff7ed,#fef2f2);
+  border: 1.5px solid rgba(234,88,12,.18);
+  border-radius: var(--r-lg);
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 10px;
+}
+.t-ava {
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 2.5px solid var(--orange);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; background: #fff; flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(234,88,12,.18); overflow: hidden;
+}
+.t-ava img { width:100%;height:100%;object-fit:cover; }
+
+/* Alert item */
+.a-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.a-item:last-child { border-bottom: none; }
+
+/* Sighting item */
+.s-item {
+  background: var(--bg3); border: 1.5px solid var(--border);
+  border-radius: var(--r); padding: 10px 12px;
+}
+.s-item + .s-item { margin-top: 7px; }
 </style>
 {% endblock %}
+
 {% block content %}
-<div class="container">
+<!-- Override page-wrap to remove padding — we handle it ourselves -->
+<style>.page-wrap{min-height:unset !important;}</style>
 
-  <!-- Teacher banner -->
-  <div class="teacher-banner">
-    <div class="teacher-ava">
-      {% if s.teacher_photo_url %}
-        <img src="{{ s.teacher_photo_url }}" alt="{{ s.teacher_name }}">
-      {% else %}🎒{% endif %}
-    </div>
-    <div style="flex:1;min-width:0;">
-      <div style="font-size:13px;font-weight:600;color:var(--orange);text-transform:uppercase;letter-spacing:.4px;">Now tracking</div>
-      <div style="font-size:20px;font-weight:800;letter-spacing:-.3px;color:var(--text);">Where's {{ s.teacher_name }}?? 👀</div>
-      <div style="font-size:13px;color:var(--text3);margin-top:2px;">{{ s.teacher_description }}</div>
-    </div>
-    <a href="/report" class="btn btn-orange" style="flex-shrink:0;border-radius:100px;padding:10px 20px;font-weight:700;">📍 I see them!</a>
-  </div>
+<div class="dash-wrap">
 
-  <!-- Unread alerts -->
-  {% if alerts %}
-  <div class="card mb-16">
-    <div class="card-title"><div class="cti cti-r">🔔</div>Alerts for you</div>
-    {% for a in alerts[:4] %}
-    <div style="display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--border);" id="alrt-{{ a.id }}">
-      <span style="font-size:20px;flex-shrink:0;">{{ '🚨' if a.severity=='high' else '⚠️' if a.severity=='medium' else 'ℹ️' }}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;font-size:14px;color:var(--text);">{{ a.title }}</div>
-        <div style="font-size:12.5px;color:var(--text3);margin-top:2px;">{{ a.message }}</div>
-        <div style="font-size:11px;color:var(--text4);margin-top:3px;">{{ a.created_at[:16] }}</div>
+  <!-- ── TOP: Banner + Alerts (scrollable) ── -->
+  <div class="dash-top">
+
+    <!-- Teacher banner -->
+    <div class="teacher-banner">
+      <div class="t-ava">
+        {% if s.teacher_photo_url %}<img src="{{ s.teacher_photo_url }}" alt="{{ s.teacher_name }}">
+        {% else %}🎒{% endif %}
       </div>
-      <button onclick="ackAndHide({{ a.id }},'alrt-{{ a.id }}')"
-              style="font-size:11.5px;font-weight:700;color:var(--accent);background:var(--accent-lt);border:none;border-radius:100px;padding:4px 11px;cursor:pointer;flex-shrink:0;white-space:nowrap;">
-        ✓ Got it
-      </button>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11.5px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.4px;">Now tracking</div>
+        <div style="font-size:17px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Where's {{ s.teacher_name }}?? 👀</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.teacher_description }}</div>
+      </div>
+      <a href="/report" class="btn btn-orange" style="flex-shrink:0;border-radius:100px;padding:9px 16px;font-size:13.5px;font-weight:700;">📍 I see them!</a>
     </div>
-    {% endfor %}
-  </div>
-  {% endif %}
 
-  <!-- Map + sidebar layout -->
-  <div style="display:grid;grid-template-columns:1fr 310px;gap:14px;">
+    <!-- Unread alerts -->
+    {% if alerts %}
+    <div class="card" style="margin-bottom:10px;">
+      <div class="card-title"><div class="cti cti-r">🔔</div>Alerts</div>
+      {% for a in alerts %}
+      <div class="a-item" id="alrt-{{ a.id }}">
+        <span style="font-size:18px;flex-shrink:0;">{{ '🚨' if a.severity=='high' else '⚠️' if a.severity=='medium' else 'ℹ️' }}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:13.5px;">{{ a.title }}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ a.message }}</div>
+        </div>
+        <button onclick="ackAndHide({{ a.id }},'alrt-{{ a.id }}')"
+                style="font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-lt);border:none;border-radius:100px;padding:4px 10px;cursor:pointer;flex-shrink:0;white-space:nowrap;-webkit-tap-highlight-color:transparent;">
+          ✓ Got it
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
 
-    <!-- SATELLITE MAP -->
-    <div class="card" style="padding:0;overflow:hidden;">
-      <div style="display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--border);">
+  </div><!-- /dash-top -->
+
+  <!-- ── BOTTOM: Map + Sidebar ── -->
+  <div class="dash-map-area">
+
+    <!-- SATELLITE MAP (fills all remaining height) -->
+    <div class="map-card">
+      <div class="map-card-header">
         <div class="live-dot"></div>
-        <span style="font-weight:700;font-size:14px;">Live Map</span>
-        <span style="font-size:11.5px;color:var(--text4);" id="mapTs"></span>
+        <span style="font-weight:700;font-size:13.5px;">Live Map</span>
+        <span style="font-size:11px;color:var(--text4);" id="mapTs"></span>
         <div style="margin-left:auto;display:flex;gap:5px;">
-          <button class="btn btn-ghost btn-sm" onclick="shareMyLocation()">📡 Share location</button>
-          <button class="btn btn-ghost btn-sm" onclick="reloadMap()">↺</button>
+          <button class="btn btn-ghost btn-sm" onclick="shareMyLocation()" style="padding:5px 9px;font-size:12px;">📡 Me</button>
+          <button class="btn btn-ghost btn-sm" onclick="reloadMap()" style="padding:5px 9px;font-size:12px;">↺</button>
         </div>
       </div>
 
-      <div id="map" style="height:460px;width:100%;display:block;"></div>
+      <div id="map"></div>
 
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:9px 14px;border-top:1px solid var(--border);font-size:12px;color:var(--text4);">
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;border:2px solid #fff;box-shadow:0 0 0 2px rgba(239,68,68,.25);margin-right:4px;vertical-align:middle;"></span>Sighting</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4f46e5;margin-right:4px;vertical-align:middle;"></span>Another user</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;margin-right:4px;vertical-align:middle;"></span>You</span>
-        <span id="locStatus" style="margin-left:auto;font-weight:600;font-size:12px;"></span>
+      <div class="map-legend">
+        <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;border:1.5px solid #fff;box-shadow:0 0 0 2px rgba(239,68,68,.25);margin-right:4px;vertical-align:middle;"></span>Sighting</span>
+        <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#4f46e5;margin-right:4px;vertical-align:middle;"></span>User</span>
+        <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#22c55e;margin-right:4px;vertical-align:middle;"></span>You</span>
+        <span id="locStatus" style="margin-left:auto;font-weight:600;font-size:11.5px;"></span>
       </div>
     </div>
 
     <!-- SIDEBAR -->
-    <div style="display:flex;flex-direction:column;gap:12px;min-height:0;">
+    <div class="dash-sidebar">
 
       <!-- Recent sightings -->
-      <div class="card" style="flex:1;">
-        <div class="card-title"><div class="cti cti-r">📋</div>Recent Sightings</div>
-        <div style="display:flex;flex-direction:column;gap:7px;max-height:320px;overflow-y:auto;" id="sightList">
+      <div class="card" style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+        <div class="card-title" style="flex-shrink:0;"><div class="cti cti-r">📋</div>Sightings</div>
+        <div style="overflow-y:auto;flex:1;" id="sightList">
           {% for s2 in sightings %}
-          <div class="sight-item {% if loop.first %}latest-sighting{% endif %}">
+          <div class="s-item {% if loop.first %}latest-sighting{% endif %}">
             <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
               <span class="badge badge-{{ s2.status }}">{{ s2.status }}</span>
-              {% if loop.first %}<span style="font-size:10.5px;font-weight:700;color:var(--red);">🔴 Latest</span>{% endif %}
-              <span style="font-size:10.5px;color:var(--text4);margin-left:auto;">{{ s2.created_at[5:16] }}</span>
+              {% if loop.first %}<span style="font-size:10px;font-weight:700;color:var(--red);">🔴 Latest</span>{% endif %}
+              <span style="font-size:10px;color:var(--text4);margin-left:auto;">{{ s2.created_at[5:16] }}</span>
             </div>
-            {% if s2.address %}<div style="font-size:13px;font-weight:600;color:var(--text);">📍 {{ s2.address }}</div>{% endif %}
-            {% if s2.description %}<div style="font-size:12px;color:var(--text3);margin-top:2px;">{{ s2.description }}</div>{% endif %}
-            <div style="font-size:11px;color:var(--text4);margin-top:4px;">by {{ s2.display_name or s2.phone }}</div>
+            {% if s2.address %}<div style="font-size:13px;font-weight:600;">📍 {{ s2.address }}</div>{% endif %}
+            {% if s2.description %}<div style="font-size:11.5px;color:var(--text3);margin-top:2px;">{{ s2.description }}</div>{% endif %}
+            <div style="font-size:10.5px;color:var(--text4);margin-top:3px;">by {{ s2.display_name or s2.phone }}</div>
           </div>
           {% else %}
-          <div style="text-align:center;padding:28px 14px;color:var(--text4);">
-            <div style="font-size:30px;margin-bottom:8px;">👀</div>
-            <div style="font-weight:700;font-size:14px;">Nobody's seen them yet!</div>
-            <div style="font-size:12px;margin-top:3px;">Be the first to spot {{ s.teacher_name }}!</div>
+          <div style="text-align:center;padding:24px 12px;color:var(--text4);">
+            <div style="font-size:28px;margin-bottom:7px;">👀</div>
+            <div style="font-weight:700;font-size:13px;">No sightings yet!</div>
           </div>
           {% endfor %}
         </div>
       </div>
 
       <!-- My profile -->
-      <div class="card">
-        <div class="card-title"><div class="cti cti-p">👤</div>My Profile</div>
-        <div style="font-size:13px;color:var(--text2);margin-bottom:10px;">
-          Hey, <strong>{{ user.display_name or user.phone }}</strong>! 👋
-          {% if user.lat %}<br><span style="font-size:11.5px;color:var(--text4);">📡 Location shared</span>{% endif %}
-        </div>
+      <div class="card" style="flex-shrink:0;">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:9px;">Hey <strong>{{ user.display_name or user.phone }}</strong>! 👋</div>
         <form method="POST" action="/profile" style="display:flex;gap:5px;">
-          <input type="text" name="display_name" placeholder="Change your name…" style="flex:1;font-size:13px;padding:8px 10px;">
+          <input type="text" name="display_name" placeholder="Change name…" style="flex:1;font-size:14px;padding:8px 10px;">
           <button type="submit" class="btn btn-secondary btn-sm">Save</button>
         </form>
       </div>
 
-    </div>
-  </div><!-- /grid -->
-</div>
+    </div><!-- /sidebar -->
+  </div><!-- /dash-map-area -->
+</div><!-- /dash-wrap -->
 
 {% block scripts %}
 <script>
-// Config from server — these are the actual defaults
 var CFG = {
-  lat:  {{ s.map_default_lat  | float }},
-  lng:  {{ s.map_default_lng  | float }},
-  zoom: {{ s.map_default_zoom | int   }},
-  myId: {{ session.user_id }},
-  teacherPhoto: {{ ('"' + s.teacher_photo_url + '"') | safe if s.teacher_photo_url else 'null' }}
+  lat:   {{ s.map_default_lat | float }},
+  lng:   {{ s.map_default_lng | float }},
+  zoom:  {{ s.map_default_zoom | int }},
+  myId:  {{ session.user_id }},
+  photo: {{ ('"' + s.teacher_photo_url + '"') | safe if s.teacher_photo_url else 'null' }}
 };
 
-// Build satellite map
-var map = L.map('map', { zoomControl:true }).setView([CFG.lat, CFG.lng], CFG.zoom);
+// Init map — size is set by CSS flex, not hardcoded px
+var map = L.map('map', { zoomControl: true }).setView([CFG.lat, CFG.lng], CFG.zoom);
 
-L.tileLayer(
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  { attribution:'Imagery © Esri', maxZoom:21 }
-).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { attribution:'Imagery © Esri', maxZoom:21, maxNativeZoom:19 }).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+  { attribution:'', maxZoom:21, maxNativeZoom:19, opacity:0.8 }).addTo(map);
 
-L.tileLayer(
-  'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-  { attribution:'', maxZoom:21, opacity:0.8 }
-).addTo(map);
+// Fix Leaflet size after CSS layout settles
+setTimeout(function(){ map.invalidateSize(); }, 100);
+window.addEventListener('resize', function(){ map.invalidateSize(); });
 
-// Icon factories
 function dotIcon(color, size) {
   return L.divIcon({
     html: '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:'+color+';border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>',
-    className: '', iconSize: [size,size], iconAnchor: [size/2,size/2]
+    className:'', iconSize:[size,size], iconAnchor:[size/2,size/2]
   });
 }
-
-function latestIcon(photoUrl) {
-  if (photoUrl && photoUrl.length > 4) {
+function photoIcon(url, size, ring) {
+  if (url && url.length > 4) {
     return L.divIcon({
-      html: '<div style="width:36px;height:36px;border-radius:50%;border:3px solid #ef4444;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.45);background:#fff;"><img src="'+photoUrl+'" style="width:100%;height:100%;object-fit:cover;"></div>',
-      className: '', iconSize: [36,36], iconAnchor: [18,18]
+      html: '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;border:2.5px solid '+ring+';overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.42);background:#fff;"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover;"></div>',
+      className:'', iconSize:[size,size], iconAnchor:[size/2,size/2]
     });
   }
-  return L.divIcon({
-    html: '<div style="font-size:30px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5));transform:translate(-50%,-90%);">📍</div>',
-    className: '', iconSize: [30,30], iconAnchor: [15,30]
-  });
+  return dotIcon(ring, size);
 }
 
-function olderIcon(photoUrl) {
-  if (photoUrl && photoUrl.length > 4) {
-    return L.divIcon({
-      html: '<div style="width:22px;height:22px;border-radius:50%;border:2px solid #ef4444;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.4);background:#fff;opacity:.8;"><img src="'+photoUrl+'" style="width:100%;height:100%;object-fit:cover;"></div>',
-      className: '', iconSize: [22,22], iconAnchor: [11,11]
-    });
-  }
-  return dotIcon('#ef4444', 14);
-}
-
-var sightMarkers = [], userMarkers = [], myMarker = null;
+var sightMarkers=[], userMarkers=[], myMarker=null;
 
 function loadSightings() {
-  fetch('/api/sightings', { credentials: 'same-origin' })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
+  fetch('/api/sightings', { credentials:'same-origin' })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
       sightMarkers.forEach(function(m){ map.removeLayer(m); });
-      sightMarkers = [];
-      data.forEach(function(s, i) {
-        var icon = (i === 0) ? latestIcon(CFG.teacherPhoto) : olderIcon(CFG.teacherPhoto);
-        var m = L.marker([s.lat, s.lng], { icon: icon })
-          .addTo(map)
+      sightMarkers=[];
+      data.forEach(function(s, i){
+        var icon = (i===0) ? photoIcon(CFG.photo, 32, '#ef4444') : photoIcon(CFG.photo, 20, '#ef4444');
+        var m = L.marker([s.lat, s.lng], { icon:icon }).addTo(map)
           .bindPopup(
             '<div>' +
-            (CFG.teacherPhoto ? '<img src="'+CFG.teacherPhoto+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 8px;border:2px solid #ef4444;"><br>' : '') +
-            '<strong style="color:#ea580c;">📍 ' + (s.display_name || 'Someone') + ' spotted them!</strong>' +
-            (s.address ? '<br>' + s.address : '') +
-            (s.description ? '<br><em style="color:#64748b;">' + s.description + '</em>' : '') +
-            '<br><small style="color:#94a3b8;">' + s.created_at.slice(0,16) + '</small>' +
-            '</div>'
+            (CFG.photo ? '<img src="'+CFG.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 8px;border:2px solid #ef4444;"><br>' : '') +
+            '<strong style="color:#ea580c;">📍 '+(s.display_name||'Someone')+' spotted them!</strong>' +
+            (s.address ? '<br>'+s.address : '') +
+            (s.description ? '<br><em style="color:#64748b;">'+s.description+'</em>' : '') +
+            '<br><small style="color:#94a3b8;">'+s.created_at.slice(0,16)+'</small></div>'
           );
         sightMarkers.push(m);
       });
       var ts = document.getElementById('mapTs');
-      if(ts) ts.textContent = '· ' + new Date().toLocaleTimeString();
-    })
-    .catch(function(e){ console.log('sightings error', e); });
+      if(ts) ts.textContent = '· '+new Date().toLocaleTimeString();
+    }).catch(function(){});
 }
 
 function loadUsers() {
-  fetch('/api/users/locations', { credentials: 'same-origin' })
+  fetch('/api/users/locations', { credentials:'same-origin' })
     .then(function(r){ return r.json(); })
     .then(function(data){
       userMarkers.forEach(function(m){ map.removeLayer(m); });
-      userMarkers = [];
+      userMarkers=[];
       data.forEach(function(u){
-        if (u.id === CFG.myId) return;
-        var m = L.marker([u.lat, u.lng], { icon: dotIcon('#4f46e5', 12) })
-          .addTo(map)
-          .bindPopup('<strong style="color:#4f46e5;">👤 ' + (u.display_name || u.phone) + '</strong><br><small style="color:#94a3b8;">' + (u.location_updated||'') + '</small>');
+        if(u.id===CFG.myId) return;
+        var m = L.marker([u.lat,u.lng],{icon:dotIcon('#4f46e5',12)}).addTo(map)
+          .bindPopup('<strong style="color:#4f46e5;">👤 '+(u.display_name||u.phone)+'</strong><br><small style="color:#94a3b8;">'+(u.location_updated||'')+'</small>');
         userMarkers.push(m);
       });
-    })
-    .catch(function(){});
+    }).catch(function(){});
 }
 
 function reloadMap() { loadSightings(); loadUsers(); }
-
-loadSightings();
-loadUsers();
-setInterval(reloadMap, 20000);
+loadSightings(); loadUsers();
+setInterval(reloadMap, 22000);
 
 function shareMyLocation() {
   var status = document.getElementById('locStatus');
-  if (!navigator.geolocation) { status.textContent = 'No GPS!'; return; }
-  status.style.color = 'var(--text3)';
-  status.textContent = 'Getting GPS…';
+  if(!navigator.geolocation){ status.textContent='No GPS!'; return; }
+  status.style.color='var(--text3)'; status.textContent='Getting…';
   navigator.geolocation.getCurrentPosition(
-    function(pos) {
-      var lat = pos.coords.latitude, lng = pos.coords.longitude;
-      fetch('/my-location', {
-        method: 'POST', credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lat: lat, lng: lng })
-      }).then(function(){
-        status.style.color = 'var(--green)';
-        status.textContent = '✓ Shared!';
-        if (myMarker) map.removeLayer(myMarker);
-        myMarker = L.marker([lat, lng], { icon: dotIcon('#22c55e', 15) })
-          .addTo(map)
-          .bindPopup('<strong style="color:#15803d;">📍 You!</strong>').openPopup();
-        map.setView([lat, lng], Math.max(CFG.zoom, 19));
-      });
+    function(pos){
+      var lat=pos.coords.latitude, lng=pos.coords.longitude;
+      fetch('/my-location',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:lat,lng:lng})})
+        .then(function(){
+          status.style.color='var(--green)'; status.textContent='✓ Shared!';
+          if(myMarker) map.removeLayer(myMarker);
+          myMarker=L.marker([lat,lng],{icon:dotIcon('#22c55e',15)}).addTo(map)
+            .bindPopup('<strong style="color:#15803d;">📍 You!</strong>').openPopup();
+          map.setView([lat,lng],Math.max(CFG.zoom,19));
+        });
     },
-    function() { status.style.color='var(--red)'; status.textContent='GPS denied'; }
+    function(){ status.style.color='var(--red)'; status.textContent='Denied'; }
   );
 }
 
 function ackAndHide(id, elId) {
   ackAlert(id, null);
-  var el = document.getElementById(elId);
-  if (el) el.style.display = 'none';
+  var el=document.getElementById(elId); if(el) el.style.display='none';
 }
 </script>
 {% endblock %}
