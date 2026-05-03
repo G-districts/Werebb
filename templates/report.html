@@ -2,147 +2,112 @@
 {% block title %}I spotted them! — {{ s.app_name }}{% endblock %}
 {% block content %}
 <div class="container">
-  <div style="margin-bottom:20px;">
+  <div style="margin-bottom:18px;">
     <div class="page-title">📍 I spotted {{ s.teacher_name }}!!</div>
-    <div class="page-sub">Drop a pin where you saw them ASAP. Every second counts lol 😭</div>
+    <div class="page-sub">Drop a pin where you saw them — every second counts 😭</div>
   </div>
-
   {% if error %}<div class="err">{{ error }}</div>{% endif %}
-
-  <div class="grid g2" style="gap:14px;">
-
+  <div class="grid g2" style="gap:13px;">
     <!-- Form -->
     <div class="card" style="order:2;">
       <div class="card-title">
         {% if s.teacher_photo_url %}
-          <img src="{{ s.teacher_photo_url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--orange);">
-        {% else %}
-          <div class="cti cti-o">📝</div>
-        {% endif %}
-        Sighting Report
+          <img src="{{ s.teacher_photo_url }}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--orange);">
+        {% else %}<div class="cti cti-o">📝</div>{% endif %}
+        Sighting Details
       </div>
-
       <form method="POST" id="rForm">
         <input type="hidden" name="lat" id="fLat">
         <input type="hidden" name="lng" id="fLng">
-
         <div class="form-group">
-          <label>📍 Set Location</label>
+          <label>📍 Location</label>
           <div style="display:flex;gap:7px;flex-wrap:wrap;">
-            <button type="button" class="btn btn-primary btn-sm" onclick="gpsPin()">📡 Use my GPS</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="beginTap()">🗺 Tap the map</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="gpsPin()">📡 My GPS</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="beginTap()">🗺 Tap map</button>
           </div>
         </div>
-
         <div class="form-group">
-          <label>Coordinates (auto-filled)</label>
+          <label>Coordinates</label>
           <div style="display:flex;gap:7px;">
-            <input type="number" id="dLat" step="any" placeholder="Latitude"  style="width:50%;" onchange="manualCoords()">
+            <input type="number" id="dLat" step="any" placeholder="Latitude" style="width:50%;" onchange="manualCoords()">
             <input type="number" id="dLng" step="any" placeholder="Longitude" style="width:50%;" onchange="manualCoords()">
           </div>
           <div class="hint" id="cHint">Use GPS or tap the map.</div>
         </div>
-
         <div class="form-group">
           <label>🏫 Where exactly?</label>
-          <input type="text" name="address" placeholder="e.g. B Hall, by the gym, parking lot…">
+          <input type="text" name="address" placeholder="e.g. B Hall, near the gym…">
         </div>
-
         <div class="form-group">
           <label>👀 What did you see?</label>
-          <textarea name="description" placeholder="Which way they were going, what they were doing, etc…"></textarea>
+          <textarea name="description" placeholder="Which way, what they were doing…"></textarea>
         </div>
-
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="submit" class="btn btn-orange btn-lg" id="subBtn" disabled>🚨 REPORT IT!</button>
           <a href="/dashboard" class="btn btn-ghost btn-lg">Never mind</a>
         </div>
       </form>
     </div>
-
     <!-- Map -->
     <div class="card" style="padding:0;overflow:hidden;order:1;">
       {% if s.teacher_photo_url %}
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid var(--border);background:var(--orange-lt);">
-        <img src="{{ s.teacher_photo_url }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--orange);">
-        <span style="font-weight:700;font-size:14px;color:var(--orange);">Pinning {{ s.teacher_name }}'s location</span>
+      <div style="display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--orange-lt);">
+        <img src="{{ s.teacher_photo_url }}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid var(--orange);">
+        <span style="font-weight:700;font-size:13.5px;color:var(--orange);">Pin {{ s.teacher_name }}'s location</span>
       </div>
       {% else %}
-      <div style="padding:12px 15px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;color:var(--text);">🛰️ Tap the map to place a pin</div>
+      <div style="padding:11px 14px;border-bottom:1px solid var(--border);font-weight:700;font-size:13.5px;">🛰️ Tap map to place pin</div>
       {% endif %}
-      <div id="map" style="height:490px;width:100%;display:block;"></div>
-      <div style="padding:9px 13px;font-size:12px;color:var(--text4);border-top:1px solid var(--border);" id="mHint">
-        Tap anywhere on the satellite map to drop the pin.
-      </div>
+      <div id="map" style="height:460px;width:100%;"></div>
+      <div style="padding:8px 13px;font-size:11.5px;color:var(--text4);border-top:1px solid var(--border);" id="mHint">Tap the satellite map to drop a pin.</div>
     </div>
-
   </div>
 </div>
-
 {% block scripts %}
 <script>
 var CFG = {
-  lat:  {{ s.map_default_lat | float }},
-  lng:  {{ s.map_default_lng | float }},
-  zoom: {{ s.map_default_zoom | int }},
+  lat:   {{ s.map_default_lat | float }},
+  lng:   {{ s.map_default_lng | float }},
+  zoom:  {{ s.map_default_zoom | int }},
   photo: {{ ('"' + s.teacher_photo_url + '"') | safe if s.teacher_photo_url else 'null' }}
 };
-
 var map = L.map('map').setView([CFG.lat, CFG.lng], CFG.zoom);
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  { attribution:'Imagery © Esri', maxZoom:21 }).addTo(map);
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-  { attribution:'', maxZoom:21, opacity:0.8 }).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Imagery © Esri',maxZoom:21,maxNativeZoom:19}).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{attribution:'',maxZoom:21,maxNativeZoom:19,opacity:0.8}).addTo(map);
 
 var pinIcon;
-if (CFG.photo) {
-  pinIcon = L.divIcon({
-    html: '<div style="width:42px;height:42px;border-radius:50%;border:3.5px solid #ea580c;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.45);background:#fff;transform:translate(-50%,-50%);"><img src="'+CFG.photo+'" style="width:100%;height:100%;object-fit:cover;"></div>',
-    className: '', iconSize: [42,42], iconAnchor: [21,21]
-  });
-} else {
-  pinIcon = L.divIcon({
-    html: '<div style="font-size:38px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.45));transform:translate(-50%,-90%);">📍</div>',
-    className: '', iconSize: [38,38], iconAnchor: [19,38]
-  });
+if(CFG.photo){
+  pinIcon=L.divIcon({html:'<div style="width:40px;height:40px;border-radius:50%;border:3.5px solid #ea580c;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.45);background:#fff;transform:translate(-50%,-50%);"><img src="'+CFG.photo+'" style="width:100%;height:100%;object-fit:cover;"></div>',className:'',iconSize:[40,40],iconAnchor:[20,20]});
+}else{
+  pinIcon=L.divIcon({html:'<div style="font-size:36px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.45));transform:translate(-50%,-90%);">📍</div>',className:'',iconSize:[36,36],iconAnchor:[18,36]});
 }
-
-var marker = null;
-
-function setPin(lat, lng) {
-  document.getElementById('fLat').value = lat;
-  document.getElementById('fLng').value = lng;
-  document.getElementById('dLat').value = lat.toFixed(6);
-  document.getElementById('dLng').value = lng.toFixed(6);
-  document.getElementById('subBtn').disabled = false;
-  document.getElementById('cHint').innerHTML = '<span style="color:var(--green);font-weight:700;">✅ Location set! Fill in the details below.</span>';
-  document.getElementById('mHint').innerHTML = '<span style="color:var(--green);font-weight:700;">📍 Pin placed! Tap again to move it.</span>';
-  if (marker) map.removeLayer(marker);
-  marker = L.marker([lat, lng], { icon: pinIcon }).addTo(map);
-  map.setView([lat, lng], Math.max(map.getZoom(), 20));
+var marker=null;
+function setPin(lat,lng){
+  document.getElementById('fLat').value=lat;
+  document.getElementById('fLng').value=lng;
+  document.getElementById('dLat').value=lat.toFixed(6);
+  document.getElementById('dLng').value=lng.toFixed(6);
+  document.getElementById('subBtn').disabled=false;
+  document.getElementById('cHint').innerHTML='<span style="color:var(--green);font-weight:700;">✅ Location set!</span>';
+  document.getElementById('mHint').innerHTML='<span style="color:var(--green);font-weight:700;">📍 Tap again to move.</span>';
+  if(marker) map.removeLayer(marker);
+  marker=L.marker([lat,lng],{icon:pinIcon}).addTo(map);
+  map.setView([lat,lng],Math.max(map.getZoom(),20));
 }
-
-function gpsPin() {
-  document.getElementById('cHint').textContent = 'Getting your GPS location…';
+function gpsPin(){
+  document.getElementById('cHint').textContent='Getting GPS…';
   navigator.geolocation.getCurrentPosition(
-    function(p) { setPin(p.coords.latitude, p.coords.longitude); },
-    function() { document.getElementById('cHint').innerHTML = '<span style="color:var(--red)">GPS denied — tap the map instead!</span>'; }
+    function(p){setPin(p.coords.latitude,p.coords.longitude);},
+    function(){document.getElementById('cHint').innerHTML='<span style="color:var(--red)">GPS denied — tap the map!</span>';}
   );
 }
-
-function beginTap() {
-  document.getElementById('mHint').innerHTML = '<span style="color:var(--accent);font-weight:700;">👆 Tap the map now to drop the pin!</span>';
+function beginTap(){document.getElementById('mHint').innerHTML='<span style="color:var(--accent);font-weight:700;">👆 Tap the map now!</span>';}
+function manualCoords(){
+  var lat=parseFloat(document.getElementById('dLat').value);
+  var lng=parseFloat(document.getElementById('dLng').value);
+  if(!isNaN(lat)&&!isNaN(lng)) setPin(lat,lng);
 }
-
-function manualCoords() {
-  var lat = parseFloat(document.getElementById('dLat').value);
-  var lng = parseFloat(document.getElementById('dLng').value);
-  if (!isNaN(lat) && !isNaN(lng)) setPin(lat, lng);
-}
-
-map.on('click', function(e) { setPin(e.latlng.lat, e.latlng.lng); });
-
-// Auto-try GPS on load
+map.on('click',function(e){setPin(e.latlng.lat,e.latlng.lng);});
 gpsPin();
 </script>
 {% endblock %}
