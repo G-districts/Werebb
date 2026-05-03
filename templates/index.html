@@ -5,131 +5,104 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#4f46e5">
 <link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/png">
 <title>{{ s.app_name }}</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#f5f6fa;--bg2:#fff;--border:#dde1ee;
+  --bg:#f5f6fa;--bg2:#fff;--border:#dde2f0;
   --accent:#4f46e5;--accent-h:#4338ca;--accent-lt:#eef2ff;--accent-md:#c7d2fe;
-  --orange:#ea580c;--orange-lt:#fff7ed;
+  --orange:#ea580c;--orange-h:#c2410c;
   --text:#0f172a;--text2:#334155;--text3:#64748b;--text4:#94a3b8;
-  --font:'Plus Jakarta Sans',system-ui,sans-serif;
-  --r:10px;--r-lg:16px;
+  --font:'Plus Jakarta Sans',system-ui,sans-serif;--r:10px;--r-lg:16px;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;}
 
-/* TOP BAR */
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);height:62px;display:flex;align-items:center;padding:0 24px;gap:10px;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);height:60px;display:flex;align-items:center;padding:0 22px;gap:10px;}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
-.logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(79,70,229,.3);}
-.logo-text{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.3px;}
+.logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 8px rgba(79,70,229,.28);}
+.logo-img{width:34px;height:34px;border-radius:9px;object-fit:cover;box-shadow:0 2px 8px rgba(79,70,229,.28);}
+.logo-text{font-size:16px;font-weight:800;color:var(--text);}
 .topbar-links{margin-left:auto;display:flex;gap:8px;}
 .btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:14px;font-weight:600;padding:8px 18px;border-radius:100px;text-decoration:none;transition:all .15s;border:1.5px solid transparent;}
 .btn-ghost{color:var(--text3);border-color:var(--border);}
 .btn-ghost:hover{background:var(--bg);color:var(--text);}
-.btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
-.btn-primary:hover{background:var(--accent-h);transform:translateY(-1px);box-shadow:0 4px 14px rgba(79,70,229,.38);}
+.btn-filled{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.28);}
+.btn-filled:hover{background:var(--accent-h);transform:translateY(-1px);box-shadow:0 4px 14px rgba(79,70,229,.36);}
 
 /* HERO */
 .hero{
   flex:1;display:flex;align-items:center;justify-content:center;
-  padding:64px 22px 48px;text-align:center;position:relative;overflow:hidden;
+  padding:60px 22px 48px;text-align:center;position:relative;overflow:hidden;
 }
-.hero-glow{
-  position:absolute;top:0;left:50%;transform:translateX(-50%);
-  width:800px;height:400px;
-  background:radial-gradient(ellipse at center,rgba(79,70,229,.12) 0%,transparent 70%);
-  pointer-events:none;
-}
+.hero-glow{position:absolute;top:0;left:50%;transform:translateX(-50%);width:800px;height:400px;background:radial-gradient(ellipse at center,rgba(79,70,229,.1),transparent 70%);pointer-events:none;}
 .hero-dots{
   position:absolute;inset:0;
   background-image:radial-gradient(circle,var(--accent-md) 1px,transparent 1px);
-  background-size:32px 32px;opacity:.35;
-  pointer-events:none;
-  mask-image:radial-gradient(ellipse 70% 80% at 50% 50%,black,transparent);
-  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 50% 50%,black,transparent);
+  background-size:30px 30px;opacity:.3;pointer-events:none;
+  mask-image:radial-gradient(ellipse 65% 75% at 50% 40%,black,transparent);
+  -webkit-mask-image:radial-gradient(ellipse 65% 75% at 50% 40%,black,transparent);
 }
-.hero-inner{position:relative;z-index:1;max-width:640px;}
+.hero-inner{position:relative;z-index:1;max-width:620px;}
 
-.hero-eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  background:var(--bg2);border:1px solid var(--border);
-  color:var(--text3);font-size:13px;font-weight:600;
-  padding:6px 16px;border-radius:100px;margin-bottom:28px;
-  box-shadow:0 1px 4px rgba(50,60,130,.06);
-}
-.eyebrow-dot{width:7px;height:7px;border-radius:50%;background:var(--orange);animation:ep 1.5s ease-in-out infinite;}
-@keyframes ep{0%,100%{opacity:1;}50%{opacity:.3;}}
-
-.hero-title{
-  font-size:clamp(44px,8vw,80px);
-  font-weight:800;line-height:1.02;letter-spacing:-2.5px;
-  color:var(--text);
-}
-.hero-title .where{color:var(--text3);font-weight:600;font-size:.65em;display:block;letter-spacing:-.5px;margin-bottom:4px;}
+.hero-title{font-size:clamp(48px,9vw,82px);font-weight:800;line-height:1.02;letter-spacing:-2.5px;color:var(--text);}
+.hero-title .where{color:var(--text3);font-weight:600;font-size:.62em;display:block;letter-spacing:-.5px;margin-bottom:2px;}
 .hero-title .name{
-  background:linear-gradient(135deg,var(--accent),#7c3aed 60%,#a855f7);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
+  background:linear-gradient(135deg,var(--accent),#7c3aed 55%,#a855f7);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-.hero-title .question{color:var(--orange);}
+.hero-title .q{color:var(--orange);}
 
-.hero-desc{
-  color:var(--text3);font-size:17px;line-height:1.65;
-  margin-top:18px;max-width:480px;margin-left:auto;margin-right:auto;
-  font-style:italic;
-}
-.hero-btns{display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap;}
-.hero-btn{
-  display:inline-flex;align-items:center;gap:7px;
-  font-family:var(--font);font-size:15px;font-weight:700;
-  padding:13px 28px;border-radius:100px;text-decoration:none;
-  transition:all .2s;border:2px solid transparent;
-}
-.hb-fill{
-  background:var(--accent);color:#fff;
-  box-shadow:0 4px 18px rgba(79,70,229,.35);
-}
-.hb-fill:hover{background:var(--accent-h);transform:translateY(-2px);box-shadow:0 8px 28px rgba(79,70,229,.42);}
+.hero-desc{color:var(--text3);font-size:17px;line-height:1.6;margin-top:16px;max-width:460px;margin-left:auto;margin-right:auto;font-style:italic;}
+.hero-btns{display:flex;gap:12px;justify-content:center;margin-top:30px;flex-wrap:wrap;}
+.hbtn{display:inline-flex;align-items:center;gap:7px;font-family:var(--font);font-size:15px;font-weight:700;padding:13px 28px;border-radius:100px;text-decoration:none;transition:all .2s;border:2px solid transparent;}
+.hb-fill{background:var(--accent);color:#fff;box-shadow:0 4px 18px rgba(79,70,229,.33);}
+.hb-fill:hover{background:var(--accent-h);transform:translateY(-2px);box-shadow:0 8px 28px rgba(79,70,229,.4);}
 .hb-out{background:var(--bg2);color:var(--text2);border-color:var(--border);}
 .hb-out:hover{border-color:var(--accent-md);color:var(--accent);background:var(--accent-lt);}
 
-/* FEATURES */
-.features{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-  gap:12px;margin-top:48px;
+/* Teacher photo */
+.teacher-photo{
+  width:110px;height:110px;border-radius:50%;
+  border:3.5px solid var(--accent-md);
+  object-fit:cover;margin:0 auto 24px;display:block;
+  box-shadow:0 4px 20px rgba(79,70,229,.22);
 }
-.feat{
-  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);
-  padding:20px 16px;text-align:center;
-  box-shadow:0 1px 3px rgba(50,60,130,.05);
-  transition:transform .2s, box-shadow .2s;
+.teacher-placeholder{
+  width:110px;height:110px;border-radius:50%;
+  border:3.5px solid var(--accent-md);
+  background:var(--accent-lt);
+  display:flex;align-items:center;justify-content:center;
+  font-size:52px;margin:0 auto 24px;
+  box-shadow:0 4px 20px rgba(79,70,229,.22);
 }
-.feat:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(50,60,130,.1);}
-.feat-em{font-size:30px;display:block;margin-bottom:10px;}
-.feat-t{font-size:14px;font-weight:700;color:var(--text);}
-.feat-d{font-size:12.5px;color:var(--text4);margin-top:4px;line-height:1.4;}
 
-/* FOOTER */
-footer{
-  background:var(--bg2);border-top:1px solid var(--border);
-  padding:20px 24px;text-align:center;
-  font-size:13px;color:var(--text4);
-}
+/* FEATURES */
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:44px;}
+.feat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 14px;text-align:center;box-shadow:0 1px 3px rgba(60,70,140,.05);transition:transform .2s,box-shadow .2s;}
+.feat:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(60,70,140,.09);}
+.feat-em{font-size:28px;display:block;margin-bottom:8px;}
+.feat-t{font-size:13.5px;font-weight:700;color:var(--text);}
+.feat-d{font-size:12px;color:var(--text4);margin-top:3px;line-height:1.4;}
+
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:18px 22px;text-align:center;font-size:13px;color:var(--text4);}
 </style>
 </head>
 <body>
-
 <div class="topbar">
   <a href="/" class="logo">
-    <div class="logo-mark">📍</div>
+    {% if s.app_logo_b64 %}
+      <img src="{{ s.app_logo_b64 }}" class="logo-img" alt="logo">
+    {% else %}
+      <div class="logo-mark">📍</div>
+    {% endif %}
     <span class="logo-text">{{ s.app_name }}</span>
   </a>
   <div class="topbar-links">
     <a href="/login" class="btn btn-ghost">Sign in</a>
     {% if s.allow_registration == '1' %}
-    <a href="/register" class="btn btn-primary">Get started →</a>
+    <a href="/register" class="btn btn-filled">Join →</a>
     {% endif %}
   </div>
 </div>
@@ -138,30 +111,35 @@ footer{
   <div class="hero-glow"></div>
   <div class="hero-dots"></div>
   <div class="hero-inner">
-    <div class="hero-eyebrow"><span class="eyebrow-dot"></span>Live Teacher Tracker</div>
+    {% if s.teacher_photo_url %}
+      <img src="{{ s.teacher_photo_url }}" class="teacher-photo" alt="{{ s.teacher_name }}">
+    {% else %}
+      <div class="teacher-placeholder">🎒</div>
+    {% endif %}
+
     <h1 class="hero-title">
       <span class="where">Where's</span>
-      <span class="name">{{ s.teacher_name }}</span><span class="question">?</span>
+      <span class="name">{{ s.teacher_name }}</span><span class="q">?</span>
     </h1>
     <p class="hero-desc">{{ s.teacher_description }}</p>
+
     <div class="hero-btns">
-      <a href="/login" class="hero-btn hb-fill">🚀 Sign in &amp; find them</a>
+      <a href="/login" class="hbtn hb-fill">🗺 Find them now</a>
       {% if s.allow_registration == '1' %}
-      <a href="/register" class="hero-btn hb-out">Create account →</a>
+      <a href="/register" class="hbtn hb-out">Create account →</a>
       {% endif %}
     </div>
 
     <div class="features">
-      <div class="feat"><span class="feat-em">🛰️</span><div class="feat-t">Satellite Map</div><div class="feat-d">Real-time aerial view of sightings</div></div>
+      <div class="feat"><span class="feat-em">🛰️</span><div class="feat-t">Satellite Map</div><div class="feat-d">Real-time aerial sightings</div></div>
       <div class="feat"><span class="feat-em">📍</span><div class="feat-t">Drop a Pin</div><div class="feat-d">Report in seconds</div></div>
-      <div class="feat"><span class="feat-em">🔔</span><div class="feat-t">Instant Alerts</div><div class="feat-d">Notify everyone fast</div></div>
-      <div class="feat"><span class="feat-em">📱</span><div class="feat-t">Works Offline</div><div class="feat-d">Install as a phone app</div></div>
+      <div class="feat"><span class="feat-em">🔔</span><div class="feat-t">Push Alerts</div><div class="feat-d">Even when app is closed</div></div>
+      <div class="feat"><span class="feat-em">📱</span><div class="feat-t">Install as App</div><div class="feat-d">Works on any phone</div></div>
     </div>
   </div>
 </div>
 
-<footer>{{ s.app_name }} — Where's {{ s.teacher_name }}? Let's find out. 🎯</footer>
-
-<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});</script>
+<footer>{{ s.app_name }} — Where's {{ s.teacher_name }}? 👀</footer>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/OneSignalSDKWorker.js',{scope:'/'}).catch(()=>{});</script>
 </body>
 </html>
