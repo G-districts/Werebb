@@ -16,33 +16,17 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- OneSignal push notifications (background capable) -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: "1d25b81f-797f-46ed-93a6-dfe838ee578e",
-      notifyButton: { enable: true }, // we use our own prompt
-      allowLocalhostAsSecureOrigin: true,
-      serviceWorkerPath: "/OneSignalSDKWorker.js",
-      serviceWorkerParam: { scope: "/" },
+      safari_web_id: "web.onesignal.auto.26f438e4-4907-4b0f-9fba-4ab15d3b5c3b",
+      notifyButton: {
+        enable: true,
+      },
     });
-
-    // Store player ID
-    try {
-      const subId = await OneSignal.User.PushSubscription.id;
-      if (subId) {
-        fetch('/register-push', {
-          method:'POST', credentials:'same-origin',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({player_id: subId})
-        });
-      }
-    } catch(e) {}
-
-    window._oneSignalReady = true;
-    window.dispatchEvent(new Event('onesignal-ready'));
   });
 </script>
 
