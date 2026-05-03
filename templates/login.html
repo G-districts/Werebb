@@ -1,34 +1,38 @@
 {% extends "base.html" %}
 {% block title %}Sign In — {{ s.app_name }}{% endblock %}
 {% block content %}
-<div style="min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:28px 20px;">
-  <div style="width:100%;max-width:400px;">
-    <div style="text-align:center;margin-bottom:32px;">
-      <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 18px;box-shadow:0 4px 18px rgba(79,70,229,.32);">📍</div>
-      <h1 style="font-size:26px;font-weight:800;letter-spacing:-.5px;">Welcome back</h1>
-      <p style="color:var(--text4);font-size:14px;margin-top:5px;">Sign in with your phone number to find {{ s.teacher_name }}</p>
+<div style="min-height:calc(100vh - 62px);display:flex;align-items:center;justify-content:center;padding:28px 20px;">
+  <div style="width:100%;max-width:390px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      {% if s.app_logo_b64 %}
+        <img src="{{ s.app_logo_b64 }}" style="width:60px;height:60px;border-radius:16px;object-fit:cover;margin:0 auto 14px;display:block;box-shadow:0 4px 16px rgba(79,70,229,.28);">
+      {% else %}
+        <div style="width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;box-shadow:0 4px 16px rgba(79,70,229,.28);">📍</div>
+      {% endif %}
+      <h1 style="font-size:24px;font-weight:800;letter-spacing:-.4px;">Welcome back!</h1>
+      <p style="color:var(--text4);font-size:14px;margin-top:4px;">Sign in to find out where {{ s.teacher_name }} is 👀</p>
     </div>
 
-    {% if msg  %}<div class="succ">{{ msg }}</div>{% endif %}
-    {% if error%}<div class="err">{{ error }}</div>{% endif %}
+    {% if msg %}<div class="succ">{{ msg }}</div>{% endif %}
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
 
-    <div class="card" style="padding:28px;">
+    <div class="card" style="padding:24px;">
       <form method="POST">
         <div class="form-group">
-          <label>Phone Number</label>
+          <label>📱 Phone Number</label>
           <input type="tel" name="phone" placeholder="(555) 000-0000" autocomplete="tel" autofocus required style="font-size:15px;">
         </div>
-        <div class="form-group" style="margin-bottom:20px;">
-          <label>Password</label>
+        <div class="form-group" style="margin-bottom:18px;">
+          <label>🔑 Password</label>
           <input type="password" name="password" placeholder="••••••••" autocomplete="current-password" required style="font-size:15px;">
         </div>
-        <button type="submit" class="btn btn-primary btn-block btn-lg">Sign in →</button>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Let's go →</button>
       </form>
     </div>
 
     {% if s.allow_registration == '1' %}
-    <p style="text-align:center;margin-top:20px;font-size:14px;color:var(--text3);">
-      No account? <a href="/register" style="color:var(--accent);font-weight:700;text-decoration:none;">Create one →</a>
+    <p style="text-align:center;margin-top:18px;font-size:14px;color:var(--text3);">
+      No account? <a href="/register" style="color:var(--accent);font-weight:700;text-decoration:none;">Sign up →</a>
     </p>
     {% endif %}
   </div>
