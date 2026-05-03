@@ -23,7 +23,7 @@
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: "1d25b81f-797f-46ed-93a6-dfe838ee578e",
-      notifyButton: { enable: false }, // we use our own prompt
+      notifyButton: { enable: true }, // we use our own prompt
       allowLocalhostAsSecureOrigin: true,
       serviceWorkerPath: "/OneSignalSDKWorker.js",
       serviceWorkerParam: { scope: "/" },
