@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Sign In — {{ s.app_name }}{% endblock %}
+{% block content %}
+<div style="min-height:calc(100dvh - var(--nav-h) - var(--sat));display:flex;align-items:center;justify-content:center;padding:28px 18px;">
+  <div style="width:100%;max-width:380px;">
+    <div style="text-align:center;margin-bottom:26px;">
+      {% if s.app_logo_b64 %}
+        <img src="{{ s.app_logo_b64 }}" style="width:56px;height:56px;border-radius:15px;object-fit:cover;margin:0 auto 13px;display:block;box-shadow:0 4px 14px rgba(79,70,229,.25);">
+      {% else %}
+        <div style="width:56px;height:56px;border-radius:15px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:25px;margin:0 auto 13px;box-shadow:0 4px 14px rgba(79,70,229,.25);">📍</div>
+      {% endif %}
+      <h1 style="font-size:22px;font-weight:800;letter-spacing:-.4px;">Welcome back!</h1>
+      <p style="color:var(--text4);font-size:13.5px;margin-top:4px;">Sign in to find {{ s.teacher_name }} 👀</p>
+    </div>
+    {% if msg %}<div class="succ">{{ msg }}</div>{% endif %}
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+    <div class="card" style="padding:22px;">
+      <form method="POST">
+        <div class="form-group">
+          <label>📱 Phone Number</label>
+          <input type="tel" name="phone" placeholder="(555) 000-0000" autocomplete="tel" autofocus required>
+        </div>
+        <div class="form-group" style="margin-bottom:18px;">
+          <label>🔑 Password</label>
+          <input type="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Let's go →</button>
+      </form>
+    </div>
+    {% if s.allow_registration == '1' %}
+    <p style="text-align:center;margin-top:16px;font-size:13.5px;color:var(--text3);">
+      No account? <a href="/register" style="color:var(--accent);font-weight:700;text-decoration:none;">Sign up →</a>
+    </p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

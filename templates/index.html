@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#4f46e5">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<title>{{ s.app_name }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f5f6fa;--bg2:#fff;--border:#dde2f0;
+  --accent:#4f46e5;--accent-h:#4338ca;--accent-lt:#eef2ff;--accent-md:#c7d2fe;
+  --orange:#ea580c;--orange-h:#c2410c;
+  --text:#0f172a;--text2:#334155;--text3:#64748b;--text4:#94a3b8;
+  --font:'Plus Jakarta Sans',system-ui,sans-serif;--r:10px;--r-lg:16px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;}
+
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);height:58px;display:flex;align-items:center;padding:0 20px;gap:10px;}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none;}
+.logo-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(79,70,229,.28);}
+.logo-img{width:32px;height:32px;border-radius:9px;object-fit:cover;box-shadow:0 2px 8px rgba(79,70,229,.28);}
+.logo-text{font-size:16px;font-weight:800;color:var(--text);}
+.topbar-links{margin-left:auto;display:flex;gap:8px;}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:14px;font-weight:600;padding:8px 18px;border-radius:100px;text-decoration:none;transition:all .15s;border:1.5px solid transparent;}
+.btn-ghost{color:var(--text3);border-color:var(--border);}
+.btn-ghost:hover{background:var(--bg);color:var(--text);}
+.btn-filled{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.25);}
+.btn-filled:hover{background:var(--accent-h);transform:translateY(-1px);}
+
+.hero{flex:1;display:flex;align-items:center;justify-content:center;padding:52px 20px 40px;text-align:center;position:relative;overflow:hidden;}
+.hero-glow{position:absolute;top:0;left:50%;transform:translateX(-50%);width:700px;height:350px;background:radial-gradient(ellipse at center,rgba(79,70,229,.1),transparent 70%);pointer-events:none;}
+.hero-dots{position:absolute;inset:0;background-image:radial-gradient(circle,var(--accent-md) 1px,transparent 1px);background-size:28px 28px;opacity:.28;pointer-events:none;mask-image:radial-gradient(ellipse 65% 70% at 50% 40%,black,transparent);-webkit-mask-image:radial-gradient(ellipse 65% 70% at 50% 40%,black,transparent);}
+.hero-inner{position:relative;z-index:1;max-width:600px;}
+
+.teacher-photo{width:100px;height:100px;border-radius:50%;border:3.5px solid var(--accent-md);object-fit:cover;margin:0 auto 22px;display:block;box-shadow:0 4px 18px rgba(79,70,229,.2);}
+.teacher-placeholder{width:100px;height:100px;border-radius:50%;border:3.5px solid var(--accent-md);background:var(--accent-lt);display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto 22px;box-shadow:0 4px 18px rgba(79,70,229,.2);}
+
+.hero-title{font-size:clamp(44px,9vw,76px);font-weight:800;line-height:1.02;letter-spacing:-2.5px;}
+.hero-title .where{color:var(--text3);font-weight:600;font-size:.62em;display:block;letter-spacing:-.5px;margin-bottom:2px;}
+.hero-title .name{background:linear-gradient(135deg,var(--accent),#7c3aed 55%,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-title .q{color:var(--orange);}
+
+.hero-desc{color:var(--text3);font-size:16px;line-height:1.6;margin-top:14px;max-width:440px;margin-left:auto;margin-right:auto;font-style:italic;}
+.hero-btns{display:flex;gap:12px;justify-content:center;margin-top:28px;flex-wrap:wrap;}
+.hbtn{display:inline-flex;align-items:center;gap:7px;font-family:var(--font);font-size:15px;font-weight:700;padding:13px 26px;border-radius:100px;text-decoration:none;transition:all .2s;border:2px solid transparent;}
+.hb-fill{background:var(--accent);color:#fff;box-shadow:0 4px 16px rgba(79,70,229,.3);}
+.hb-fill:hover{background:var(--accent-h);transform:translateY(-2px);box-shadow:0 8px 24px rgba(79,70,229,.38);}
+.hb-out{background:var(--bg2);color:var(--text2);border-color:var(--border);}
+.hb-out:hover{border-color:var(--accent-md);color:var(--accent);background:var(--accent-lt);}
+
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:40px;}
+.feat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 13px;text-align:center;box-shadow:0 1px 3px rgba(60,70,140,.04);transition:transform .2s,box-shadow .2s;}
+.feat:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(60,70,140,.09);}
+.feat-em{font-size:26px;display:block;margin-bottom:7px;}
+.feat-t{font-size:13px;font-weight:700;color:var(--text);}
+.feat-d{font-size:11.5px;color:var(--text4);margin-top:3px;line-height:1.4;}
+
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:16px 20px;text-align:center;font-size:12.5px;color:var(--text4);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="/" class="logo">
+    {% if s.app_logo_b64 %}
+      <img src="{{ s.app_logo_b64 }}" class="logo-img" alt="logo">
+    {% else %}
+      <div class="logo-mark">📍</div>
+    {% endif %}
+    <span class="logo-text">{{ s.app_name }}</span>
+  </a>
+  <div class="topbar-links">
+    <a href="/login" class="btn btn-ghost">Sign in</a>
+    {% if s.allow_registration == '1' %}
+    <a href="/register" class="btn btn-filled">Join →</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-dots"></div>
+  <div class="hero-inner">
+    {% if s.teacher_photo_url %}
+      <img src="{{ s.teacher_photo_url }}" class="teacher-photo" alt="{{ s.teacher_name }}">
+    {% else %}
+      <div class="teacher-placeholder">🎒</div>
+    {% endif %}
+    <h1 class="hero-title">
+      <span class="where">Where's</span>
+      <span class="name">{{ s.teacher_name }}</span><span class="q">?</span>
+    </h1>
+    <p class="hero-desc">{{ s.teacher_description }}</p>
+    <div class="hero-btns">
+      <a href="/login" class="hbtn hb-fill">🗺 Find them now</a>
+      {% if s.allow_registration == '1' %}
+      <a href="/register" class="hbtn hb-out">Create account →</a>
+      {% endif %}
+    </div>
+    <div class="features">
+      <div class="feat"><span class="feat-em">🛰️</span><div class="feat-t">Satellite Map</div><div class="feat-d">Real-time aerial sightings</div></div>
+      <div class="feat"><span class="feat-em">📍</span><div class="feat-t">Drop a Pin</div><div class="feat-d">Report in seconds</div></div>
+      <div class="feat"><span class="feat-em">🔔</span><div class="feat-t">Push Alerts</div><div class="feat-d">Even when closed</div></div>
+      <div class="feat"><span class="feat-em">📱</span><div class="feat-t">Install as App</div><div class="feat-d">Works on any phone</div></div>
+    </div>
+  </div>
+</div>
+<footer>{{ s.app_name }} — Where's {{ s.teacher_name }}? 👀</footer>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="{{ s.app_name }}">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<title>{% block title %}{{ s.app_name }}{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- OneSignal — EXACT init code as provided (enables bell button + safari support) -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "1d25b81f-797f-46ed-93a6-dfe838ee578e",
+      safari_web_id: "web.onesignal.auto.26f438e4-4907-4b0f-9fba-4ab15d3b5c3b",
+      notifyButton: {
+        enable: true,
+      },
+    });
+  });
+</script>
+
+<style>
+:root {
+  --bg:#f5f6fa; --bg2:#fff; --bg3:#eef0f8; --bg4:#e3e6f3;
+  --border:#dde2f0; --border2:#c8cedf;
+  --sh:0 1px 3px rgba(60,70,140,.06),0 4px 16px rgba(60,70,140,.04);
+  --sh-md:0 2px 10px rgba(60,70,140,.09),0 6px 28px rgba(60,70,140,.06);
+  --sh-lg:0 8px 32px rgba(60,70,140,.13),0 2px 8px rgba(60,70,140,.06);
+  --accent:#4f46e5; --accent-h:#4338ca; --accent-lt:#eef2ff; --accent-md:#c7d2fe;
+  --violet:#7c3aed; --violet-lt:#f5f3ff;
+  --orange:#ea580c; --orange-lt:#fff7ed; --orange-h:#c2410c;
+  --green:#15803d; --green-br:#22c55e; --green-lt:#f0fdf4;
+  --red:#dc2626; --red-br:#ef4444; --red-lt:#fef2f2;
+  --amber:#d97706; --amber-br:#f59e0b; --amber-lt:#fffbeb;
+  --text:#0f172a; --text2:#334155; --text3:#64748b; --text4:#94a3b8; --text5:#cbd5e1;
+  --font:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'DM Mono',monospace;
+  --r:10px; --r-sm:7px; --r-lg:16px;
+  --nav-h:56px;
+  /* Safe area insets for notched phones */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  height:100%;
+  /* Prevent bounce/rubber banding on iOS PWA */
+  overscroll-behavior:none;
+}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:var(--font);font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  /* Prevent text size adjust on rotate */
+  -webkit-text-size-adjust:100%;
+}
+
+/* ── NAVBAR ────────────────────────────────────── */
+.navbar{
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  height:var(--nav-h);
+  display:flex;align-items:center;
+  padding:0 16px 0 calc(16px + var(--sal));
+  padding-right:calc(16px + var(--sar));
+  gap:6px;
+  position:sticky;top:0;z-index:800;
+  /* Extend behind status bar on iOS */
+  padding-top:var(--sat);
+  height:calc(var(--nav-h) + var(--sat));
+}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;}
+.nav-logo-img{width:30px;height:30px;border-radius:8px;object-fit:cover;box-shadow:0 2px 6px rgba(79,70,229,.28);}
+.nav-logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 6px rgba(79,70,229,.28);flex-shrink:0;}
+.nav-logo-text{font-size:15.5px;font-weight:800;color:var(--text);letter-spacing:-.3px;white-space:nowrap;}
+.nav-links{display:flex;gap:2px;margin-left:auto;align-items:center;}
+.nav-link{font-size:13px;font-weight:600;color:var(--text3);text-decoration:none;padding:6px 11px;border-radius:var(--r-sm);transition:all .15s;white-space:nowrap;}
+.nav-link:hover{background:var(--bg3);color:var(--text);}
+.nav-link.active{background:var(--accent-lt);color:var(--accent);}
+.nav-pill{background:var(--orange) !important;color:#fff !important;border-radius:100px !important;padding:6px 14px !important;font-weight:700 !important;box-shadow:0 2px 6px rgba(234,88,12,.25);}
+.nav-pill:hover{background:var(--orange-h) !important;}
+.nav-out:hover{color:var(--red) !important;background:var(--red-lt) !important;}
+.nav-chip{font-family:var(--mono);font-size:10.5px;color:var(--text4);background:var(--bg3);border:1px solid var(--border);border-radius:100px;padding:3px 9px;margin-left:5px;white-space:nowrap;max-width:100px;overflow:hidden;text-overflow:ellipsis;}
+/* Hide chip on very small screens */
+@media(max-width:380px){.nav-chip{display:none;}}
+
+/* ── PAGE WRAPPER (fills space below nav) ─────── */
+.page-wrap{
+  /* Use dvh (dynamic viewport height) which accounts for mobile browser chrome */
+  min-height:calc(100dvh - var(--nav-h) - var(--sat));
+  /* Fallback */
+  min-height:calc(100vh - var(--nav-h) - var(--sat));
+  display:flex;flex-direction:column;
+}
+
+/* ── CONTAINER ─────────────────────────────────── */
+.container{
+  max-width:1200px;margin:0 auto;
+  padding:20px 16px;
+  padding-left:calc(16px + var(--sal));
+  padding-right:calc(16px + var(--sar));
+  padding-bottom:calc(20px + var(--sab));
+  flex:1;
+}
+.page-title{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:3px;}
+.page-sub{font-size:13.5px;color:var(--text3);margin-bottom:18px;}
+
+/* ── CARDS ─────────────────────────────────────── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh);}
+.card-title{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--text);margin-bottom:13px;}
+.cti{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.cti-p{background:var(--accent-lt);}
+.cti-o{background:var(--orange-lt);}
+.cti-g{background:var(--green-lt);}
+.cti-r{background:var(--red-lt);}
+.cti-a{background:var(--amber-lt);}
+.cti-v{background:var(--violet-lt);}
+
+/* ── GRID ──────────────────────────────────────── */
+.grid{display:grid;gap:12px;}
+.g2{grid-template-columns:1fr 1fr;}
+.g3{grid-template-columns:1fr 1fr 1fr;}
+.g4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+
+/* ── STATS ─────────────────────────────────────── */
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;box-shadow:var(--sh);}
+.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:11px;}
+.stat-num{font-size:32px;font-weight:800;letter-spacing:-2px;line-height:1;}
+.stat-lbl{font-size:11.5px;font-weight:600;color:var(--text4);margin-top:4px;}
+
+/* ── FORMS ─────────────────────────────────────── */
+.form-group{margin-bottom:13px;}
+label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:5px;}
+.req{color:var(--red);}
+input[type=text],input[type=password],input[type=tel],input[type=number],input[type=file],select,textarea{
+  width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r-sm);
+  color:var(--text);font-family:var(--font);font-size:16px;/* 16px prevents iOS zoom */
+  padding:10px 12px;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1);}
+textarea{resize:vertical;min-height:78px;font-size:15px;}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.hint{font-size:12px;color:var(--text4);margin-top:4px;line-height:1.4;}
+
+/* ── BUTTONS ────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font);font-size:14px;font-weight:600;padding:10px 17px;border-radius:var(--r-sm);border:1.5px solid transparent;cursor:pointer;text-decoration:none;transition:all .15s;white-space:nowrap;line-height:1;-webkit-tap-highlight-color:transparent;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover,.btn-primary:active{background:var(--accent-h);}
+.btn-secondary{background:var(--bg3);color:var(--text2);border-color:var(--border);}
+.btn-secondary:hover{background:var(--bg4);}
+.btn-orange{background:var(--orange);color:#fff;}
+.btn-orange:hover,.btn-orange:active{background:var(--orange-h);}
+.btn-danger{background:var(--red-lt);color:var(--red);border-color:rgba(220,38,38,.18);}
+.btn-danger:hover{background:var(--red);color:#fff;}
+.btn-green{background:var(--green-lt);color:var(--green);border-color:rgba(21,128,61,.18);}
+.btn-green:hover{background:var(--green);color:#fff;}
+.btn-ghost{background:transparent;color:var(--text4);border-color:transparent;}
+.btn-ghost:hover{background:var(--bg3);color:var(--text2);}
+.btn-sm{padding:6px 11px;font-size:12.5px;}
+.btn-lg{padding:13px 24px;font-size:15px;font-weight:700;border-radius:var(--r);}
+.btn-block{width:100%;}
+
+/* ── BADGES ─────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:100px;white-space:nowrap;}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.badge-pending  {background:var(--amber-lt);color:#92400e;}
+.badge-reviewed {background:var(--green-lt);color:#166534;}
+.badge-dismissed{background:var(--bg3);color:var(--text4);}
+.badge-high     {background:var(--red-lt);color:#991b1b;}
+.badge-medium   {background:var(--amber-lt);color:#92400e;}
+.badge-low      {background:var(--green-lt);color:#166534;}
+.badge-admin    {background:var(--accent-lt);color:#3730a3;}
+.badge-active   {background:var(--green-lt);color:#166534;}
+.badge-inactive {background:var(--bg3);color:var(--text4);}
+
+/* ── TABLE ─────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r);}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--bg3);}
+th{font-size:11px;font-weight:700;color:var(--text4);text-align:left;padding:9px 13px;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px;}
+td{padding:10px 13px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle;}
+tbody tr:hover td{background:var(--bg3);}
+
+/* ── TABS ───────────────────────────────────────── */
+.tabs{display:flex;gap:3px;background:var(--bg3);padding:4px;border-radius:var(--r);margin-bottom:18px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tab{font-size:13px;font-weight:600;padding:7px 13px;border-radius:var(--r-sm);cursor:pointer;color:var(--text4);background:transparent;border:none;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+.tab:hover{color:var(--text2);}
+.tab.active{background:var(--bg2);color:var(--accent);box-shadow:var(--sh);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ── TOASTS ─────────────────────────────────────── */
+#toastBox{
+  position:fixed;top:calc(var(--nav-h) + var(--sat) + 8px);right:12px;
+  z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:flex-end;
+  pointer-events:none;max-width:320px;width:calc(100% - 24px);
+}
+.toast{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:12px 14px;display:flex;align-items:flex-start;gap:10px;
+  box-shadow:var(--sh-lg);animation:toastIn .3s cubic-bezier(.34,1.56,.64,1) both;
+  pointer-events:all;width:100%;
+}
+.toast-high{border-left:4px solid var(--red-br);}
+.toast-medium{border-left:4px solid var(--amber-br);}
+.toast-low{border-left:4px solid var(--green-br);}
+.toast-icon{font-size:20px;flex-shrink:0;line-height:1;margin-top:1px;}
+.toast-body{flex:1;min-width:0;}
+.toast-title{font-weight:700;font-size:13px;color:var(--text);line-height:1.2;}
+.toast-msg{font-size:12px;color:var(--text3);margin-top:3px;line-height:1.4;}
+.toast-ack{font-size:11.5px;font-weight:700;color:var(--accent);margin-top:6px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;background:var(--accent-lt);border:none;border-radius:100px;padding:3px 9px;-webkit-tap-highlight-color:transparent;}
+.toast-x{font-size:14px;color:var(--text5);cursor:pointer;flex-shrink:0;line-height:1;padding:2px;}
+@keyframes toastIn{from{opacity:0;transform:translateX(14px) scale(.95);}to{opacity:1;transform:none;}}
+
+/* ── NOTIFICATION PERMISSION MODAL ─────────────── */
+.notif-modal-bg{
+  position:fixed;inset:0;z-index:10000;
+  background:rgba(15,23,42,.55);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  animation:fadeIn .2s ease;
+}
+.notif-modal{
+  background:var(--bg2);border-radius:22px;padding:28px 24px;
+  max-width:320px;width:100%;text-align:center;
+  box-shadow:0 20px 60px rgba(15,23,42,.25);
+  animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);
+}
+.notif-modal-icon{font-size:52px;margin-bottom:14px;display:block;}
+.notif-modal h3{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:8px;}
+.notif-modal p{font-size:14px;color:var(--text3);line-height:1.55;margin-bottom:22px;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.95);}to{opacity:1;transform:none;}}
+
+/* ── LATEST SIGHTING FLASH ──────────────────────── */
+@keyframes borderFlash{0%,49%{border-color:var(--red-br);}50%,100%{border-color:var(--amber-br);}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3);}50%{box-shadow:0 0 0 7px rgba(239,68,68,0);}}
+.latest-sighting{border-width:2px !important;animation:borderFlash 1.2s infinite,glowPulse 1.4s infinite;}
+
+/* ── LIVE DOT ───────────────────────────────────── */
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green-br);flex-shrink:0;animation:livePulse 1.8s ease-in-out infinite;}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4);}50%{box-shadow:0 0 0 5px rgba(34,197,94,0);}}
+
+/* ── MAP FIX ────────────────────────────────────── */
+.leaflet-popup-content-wrapper{border-radius:var(--r-sm) !important;box-shadow:var(--sh-lg) !important;border:1px solid var(--border) !important;font-family:var(--font) !important;}
+.leaflet-popup-content{margin:11px 13px !important;font-size:13px !important;color:var(--text) !important;line-height:1.5 !important;}
+.leaflet-popup-tip-container{display:none;}
+/* Ensure Leaflet controls respect safe areas */
+.leaflet-top.leaflet-right{right:calc(4px + var(--sar));}
+
+/* ── MISC ───────────────────────────────────────── */
+.divider{height:1px;background:var(--border);margin:14px 0;}
+.mono{font-family:var(--mono);}
+.muted{color:var(--text4);}
+.mt-4{margin-top:4px;}.mt-8{margin-top:8px;}.mt-12{margin-top:12px;}.mt-16{margin-top:16px;}
+.mb-8{margin-bottom:8px;}.mb-16{margin-bottom:16px;}
+.ml-auto{margin-left:auto;}
+.err {background:var(--red-lt);border:1.5px solid rgba(220,38,38,.18);color:#991b1b;padding:11px 14px;border-radius:var(--r-sm);margin-bottom:13px;font-size:13.5px;font-weight:500;}
+.succ{background:var(--green-lt);border:1.5px solid rgba(21,128,61,.18);color:#166534;padding:11px 14px;border-radius:var(--r-sm);margin-bottom:13px;font-size:13.5px;font-weight:500;}
+.info{background:var(--accent-lt);border:1.5px solid rgba(79,70,229,.18);color:#3730a3;padding:11px 14px;border-radius:var(--r-sm);margin-bottom:13px;font-size:13.5px;font-weight:500;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+
+{% if session.user_id %}
+<nav class="navbar">
+  <a href="{% if session.is_admin %}/admin{% else %}/dashboard{% endif %}" class="nav-logo">
+    {% if s.app_logo_b64 %}
+      <img src="{{ s.app_logo_b64 }}" class="nav-logo-img" alt="logo">
+    {% else %}
+      <div class="nav-logo-mark">📍</div>
+    {% endif %}
+    <span class="nav-logo-text">{{ s.app_name }}</span>
+  </a>
+  <div class="nav-links">
+    {% if session.is_admin %}
+      <a href="/admin"     class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">Admin</a>
+      <a href="/dashboard" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Map</a>
+      <a href="/report"    class="nav-link nav-pill">📍 Report</a>
+    {% else %}
+      <a href="/dashboard" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Map</a>
+      <a href="/report"    class="nav-link nav-pill {% if request.endpoint == 'report' %}active{% endif %}">📍 Report!</a>
+    {% endif %}
+    <a href="/logout" class="nav-link nav-out">Out</a>
+  </div>
+  <div class="nav-chip">{{ session.disp_name or session.phone }}</div>
+</nav>
+{% endif %}
+
+<div id="toastBox"></div>
+
+{% if first_login is defined and first_login %}
+<!-- First-login notification permission modal -->
+<div class="notif-modal-bg" id="notifModal">
+  <div class="notif-modal">
+    <span class="notif-modal-icon">🔔</span>
+    <h3>Turn on alerts!</h3>
+    <p>When {{ s.teacher_name }} is spotted you'll get a push notification — even when your phone is locked.</p>
+    <button class="btn btn-primary btn-block btn-lg" onclick="requestNotifPerms()" style="margin-bottom:10px;">
+      🔔 Yes, notify me!
+    </button>
+    <button class="btn btn-ghost btn-block" onclick="document.getElementById('notifModal').remove()">
+      Maybe later
+    </button>
+  </div>
+</div>
+{% endif %}
+
+<div class="page-wrap">
+{% block content %}{% endblock %}
+</div>
+
+<script>
+// OneSignal registers its own service worker (OneSignalSDKWorker.js) automatically.
+// We only pre-register it here so it's ready before SDK init.
+// Do NOT register a second sw.js — it conflicts with OneSignal's push handling.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' }).catch(() => {});
+}
+
+{% if session.user_id %}
+let lastAlertId = 0;
+
+function pollAlerts() {
+  fetch('/api/alerts/latest?after=' + lastAlertId, { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(arr => arr.forEach(a => {
+      if (a.id > lastAlertId) { lastAlertId = a.id; showToast(a); }
+    }))
+    .catch(() => {});
+}
+setInterval(pollAlerts, 10000);
+
+const ICONS = { high:'🚨', medium:'⚠️', low:'ℹ️' };
+
+function showToast(a) {
+  const el = document.createElement('div');
+  el.className = `toast toast-${a.severity}`;
+  el.dataset.id = a.id;
+  el.innerHTML = `
+    <div class="toast-icon">${ICONS[a.severity]||'📢'}</div>
+    <div class="toast-body">
+      <div class="toast-title">${a.title}</div>
+      <div class="toast-msg">${a.message}</div>
+      <button class="toast-ack" onclick="ackAlert(${a.id},this.closest('.toast'))">✓ Got it!</button>
+    </div>
+    <div class="toast-x" onclick="this.closest('.toast').remove()">✕</div>`;
+  document.getElementById('toastBox').appendChild(el);
+  setTimeout(() => el?.remove(), 15000);
+}
+
+function ackAlert(id, el) {
+  fetch('/api/alerts/ack', {
+    method:'POST', credentials:'same-origin',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({alert_id:id})
+  }).then(() => { if (el) el.remove(); });
+}
+
+async function requestNotifPerms() {
+  document.getElementById('notifModal')?.remove();
+  // OneSignal v16 manages subscription state itself via the bell button.
+  // Calling Notification.requestPermission() directly can confuse the SDK.
+  // Instead: trigger the OneSignal permission flow via its own API when ready.
+  try {
+    if (window.OneSignal) {
+      // v16: use the push subscription opt-in method
+      await window.OneSignal.User.PushSubscription.optIn();
+    } else {
+      // Fallback: native browser prompt, SDK picks it up automatically
+      await Notification.requestPermission();
+    }
+  } catch(e) {
+    // Fallback if optIn not available
+    try { await Notification.requestPermission(); } catch(_) {}
+  }
+}
+{% endif %}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

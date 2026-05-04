@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ s.app_name }} — Control Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--accent:#4f46e5;--red:#dc2626;--green:#15803d;--font:'Plus Jakarta Sans',system-ui,sans-serif;}
+body{background:#f5f6fa;font-family:var(--font);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.box{background:#fff;border:1px solid #dde2f0;border-radius:18px;padding:32px 28px;max-width:360px;width:100%;box-shadow:0 4px 20px rgba(60,70,140,.1);text-align:center;}
+.icon{font-size:52px;margin-bottom:16px;display:block;}
+h1{font-size:22px;font-weight:800;color:#0f172a;margin-bottom:6px;}
+p{font-size:14px;color:#64748b;margin-bottom:24px;line-height:1.55;}
+.status{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:14px;font-weight:700;padding:8px 20px;
+  border-radius:100px;margin-bottom:24px;
+}
+.status-on{background:#fef2f2;color:#991b1b;}
+.status-off{background:#f0fdf4;color:#166534;}
+.status-dot{width:9px;height:9px;border-radius:50%;background:currentColor;flex-shrink:0;}
+form{margin-bottom:10px;}
+.btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:7px;
+  font-family:var(--font);font-size:15px;font-weight:700;padding:13px 20px;
+  border-radius:12px;border:none;cursor:pointer;transition:all .15s;
+  text-decoration:none;
+}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:#b91c1c;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:#166534;}
+.meta{font-size:12px;color:#94a3b8;margin-top:18px;}
+</style>
+</head>
+<body>
+<div class="box">
+  {% if s.lockdown_mode == '1' %}
+    <span class="icon">🔒</span>
+    <h1>Lockdown is ON</h1>
+    <p>All pages are currently redirecting to a fake error. Only this URL works.</p>
+    <div class="status status-on"><span class="status-dot"></span>LOCKDOWN ACTIVE</div>
+    <form method="POST" action="/admin/lockdown-toggle">
+      <input type="hidden" name="secret" value="{{ s.lockdown_secret }}">
+      <button type="submit" class="btn btn-green">✅ Turn Lockdown OFF</button>
+    </form>
+  {% else %}
+    <span class="icon">🔓</span>
+    <h1>App is running normally</h1>
+    <p>Enable lockdown to redirect everyone to a fake YouTube error page — fast.</p>
+    <div class="status status-off"><span class="status-dot"></span>LOCKDOWN OFF</div>
+    <form method="POST" action="/admin/lockdown-toggle">
+      <input type="hidden" name="secret" value="{{ s.lockdown_secret }}">
+      <button type="submit" class="btn btn-red">🚨 Enable Lockdown NOW</button>
+    </form>
+  {% endif %}
+  <div class="meta">
+    Secret URL: <strong>/{{ s.lockdown_secret }}</strong><br>
+    <a href="/admin" style="color:#4f46e5;text-decoration:none;font-weight:600;">→ Back to admin dashboard</a>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YouTube</title>
+<link rel="icon" href="https://www.youtube.com/favicon.ico">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0f0f0f;color:#f1f1f1;font-family:'YouTube Noto',Roboto,Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+/* YouTube top bar */
+.yt-header{background:#0f0f0f;border-bottom:1px solid #272727;height:56px;display:flex;align-items:center;padding:0 16px;gap:16px;position:sticky;top:0;z-index:100;}
+.yt-logo{display:flex;align-items:center;gap:0;text-decoration:none;}
+.yt-logo-icon{color:#ff0000;font-size:28px;font-weight:900;}
+.yt-logo-text{color:#f1f1f1;font-size:18px;font-weight:500;letter-spacing:-0.5px;margin-left:2px;}
+.yt-search{flex:1;max-width:640px;margin:0 auto;display:flex;align-items:center;}
+.yt-search input{
+  width:100%;background:#121212;border:1px solid #303030;border-right:none;
+  color:#f1f1f1;font-size:16px;padding:8px 16px;border-radius:40px 0 0 40px;
+  outline:none;height:40px;
+}
+.yt-search input::placeholder{color:#717171;}
+.yt-search button{
+  background:#272727;border:1px solid #303030;border-left:none;
+  color:#f1f1f1;padding:0 20px;height:40px;border-radius:0 40px 40px 0;
+  cursor:pointer;font-size:16px;
+}
+.yt-search button:hover{background:#3f3f3f;}
+@media(max-width:600px){
+  .yt-search{display:none;}
+  .yt-logo-text{display:none;}
+}
+/* Error content */
+.error-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px;text-align:center;}
+.error-inner{max-width:520px;}
+.error-icon{font-size:80px;margin-bottom:20px;display:block;filter:grayscale(1);opacity:.7;}
+.error-title{font-size:24px;font-weight:500;color:#f1f1f1;margin-bottom:12px;}
+.error-sub{font-size:15px;color:#aaa;line-height:1.6;margin-bottom:24px;}
+.error-code{font-size:13px;color:#717171;font-family:monospace;margin-bottom:28px;}
+.yt-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#f1f1f1;color:#0f0f0f;
+  font-size:14px;font-weight:500;padding:10px 22px;border-radius:18px;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:background .15s;
+}
+.yt-btn:hover{background:#ddd;}
+.yt-btn-ghost{background:transparent;color:#f1f1f1;border:1px solid #717171;margin-left:10px;}
+.yt-btn-ghost:hover{background:rgba(255,255,255,.1);}
+/* Recommended videos (fake) */
+.suggestions{padding:16px;max-width:1000px;margin:0 auto;width:100%;}
+.sugg-title{font-size:16px;font-weight:500;color:#f1f1f1;margin-bottom:12px;padding:0 4px;}
+.sugg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+.sugg-card{cursor:pointer;}
+.sugg-thumb{
+  background:#272727;border-radius:8px;aspect-ratio:16/9;
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+  margin-bottom:8px;color:#555;
+}
+.sugg-vinfo{display:flex;gap:8px;}
+.sugg-avatar{width:36px;height:36px;border-radius:50%;background:#3f3f3f;flex-shrink:0;}
+.sugg-meta{flex:1;}
+.sugg-vtitle{font-size:14px;color:#f1f1f1;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.sugg-vchan{font-size:12px;color:#aaa;margin-top:3px;}
+</style>
+</head>
+<body>
+
+<div class="yt-header">
+  <a href="#" class="yt-logo" onclick="return false;">
+    <span class="yt-logo-icon">▶</span>
+    <span class="yt-logo-text">YouTube</span>
+  </a>
+  <div class="yt-search">
+    <input type="text" placeholder="Search" value="">
+    <button>🔍</button>
+  </div>
+</div>
+
+<div class="error-wrap">
+  <div class="error-inner">
+    <span class="error-icon">😞</span>
+    <h1 class="error-title">This video isn't available anymore</h1>
+    <p class="error-sub">
+      The video you are looking for has been removed, had its privacy settings changed, or has been deleted by the uploader.
+    </p>
+    <p class="error-code">Error code: 150 — Video unavailable in your region</p>
+    <a href="#" class="yt-btn" onclick="history.back(); return false;">← Go back</a>
+    <a href="#" class="yt-btn yt-btn-ghost" onclick="return false;">Browse videos</a>
+  </div>
+</div>
+
+<div class="suggestions">
+  <div class="sugg-title">Recommended for you</div>
+  <div class="sugg-grid" id="grid"></div>
+</div>
+
+<script>
+// Generate fake video cards so it looks real
+var titles = [
+  "10 CRAZY School Hacks You Never Knew","Study With Me - 4 Hours Pomodoro","Best Lofi Hip Hop Radio 24/7 🎵",
+  "How To Ace Every Test (Study Tips)","Top 10 Funniest Fails of 2024","Viral TikTok Compilations #47",
+  "DIY Room Makeover on a Budget","Gaming Highlights - Best Moments","Mini Documentary: Unknown Stories",
+  "Cooking The Perfect Pasta","Nature Documentary 4K - Amazing Earth","Try Not To Laugh Challenge"
+];
+var channels = ["Daily Uploads","StudyTube","LoFi Beats","HacksPlus","FunnyClips","TrendingNow",
+  "DIYChannel","GamingHub","DocuMini","CookingEasy","NatureWorld","LaughFactory"];
+var emojis = ["🎮","📚","🎵","😂","🌍","🍕","🔥","✨","🎬","🏆","💡","🎯"];
+var grid = document.getElementById('grid');
+for(var i=0;i<8;i++){
+  var card = document.createElement('div');
+  card.className = 'sugg-card';
+  card.innerHTML = '<div class="sugg-thumb">'+emojis[i%emojis.length]+'</div>' +
+    '<div class="sugg-vinfo"><div class="sugg-avatar"></div>' +
+    '<div class="sugg-meta"><div class="sugg-vtitle">'+titles[i%titles.length]+'</div>' +
+    '<div class="sugg-vchan">'+channels[i%channels.length]+' · '+(Math.floor(Math.random()*900)+100)+'K views</div></div></div>';
+  grid.appendChild(card);
+}
+</script>
+</body>
+</html>
